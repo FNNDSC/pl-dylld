@@ -19,18 +19,18 @@ def get_version(rel_path: str) -> str:
 
 
 setup(
-    name='chris-plugin-template',
-    version=get_version('app.py'),
-    description='A ChRIS DS plugin template',
+    name='dylld',
+    version=get_version('dylld.py'),
+    description='A ChRIS plugin that dynamically builds a workflow to compute length discrepencies from extremity X-Rays',
     author='FNNDSC',
-    author_email='dev@babyMRI.org',
-    url='https://github.com/FNNDSC/python-chrisapp-template',
-    py_modules=['app'],
+    author_email='rudolph.pienaar@childrens.harvard.edu',
+    url='https://github.com/rudolphpienaar/pl-dylld',
+    py_modules=['dylld'],
     install_requires=['chris_plugin'],
     license='MIT',
     entry_points={
         'console_scripts': [
-            'commandname = app:main'
+            'dylld = dylld:main'
         ]
     },
     classifiers=[

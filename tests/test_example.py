@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from app import parser, main, DISPLAY_TITLE
+from dylld import parser, main, DISPLAY_TITLE
 
 
 def test_main(mocker, tmp_path: Path):
