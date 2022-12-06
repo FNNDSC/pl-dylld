@@ -29,12 +29,12 @@ parser.add_argument('-V', '--version', action='version',
 
 # documentation: https://fnndsc.github.io/chris_plugin/chris_plugin.html#chris_plugin
 @chris_plugin(
-    parser=parser,
-    title='Leg-Length Discrepency - Dynamic Compute Flow',
-    category='',                 # ref. https://chrisstore.co/plugins
-    min_memory_limit='100Mi',    # supported units: Mi, Gi
-    min_cpu_limit='1000m',       # millicores, e.g. "1000m" = 1 CPU core
-    min_gpu_limit=0              # set min_gpu_limit=1 to enable GPU
+    parser              = parser,
+    title               = 'Leg-Length Discrepency - Dynamic Compute Flow',
+    category            = '',               # ref. https://chrisstore.co/plugins
+    min_memory_limit    = '100Mi',          # supported units: Mi, Gi
+    min_cpu_limit       = '1000m',          # millicores, e.g. "1000m" = 1 CPU core
+    min_gpu_limit       = 0                 # set min_gpu_limit=1 to enable GPU
 )
 def main(options: Namespace, inputdir: Path, outputdir: Path):
     """

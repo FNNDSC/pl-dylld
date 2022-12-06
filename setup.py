@@ -19,27 +19,28 @@ def get_version(rel_path: str) -> str:
 
 
 setup(
-    name='dylld',
-    version=get_version('dylld.py'),
-    description='A ChRIS plugin that dynamically builds a workflow to compute length discrepencies from extremity X-Rays',
-    author='FNNDSC',
-    author_email='rudolph.pienaar@childrens.harvard.edu',
-    url='https://github.com/rudolphpienaar/pl-dylld',
-    py_modules=['dylld'],
-    install_requires=['chris_plugin'],
-    license='MIT',
-    entry_points={
+    name                = 'dylld',
+    version             = get_version('dylld.py'),
+    description         = 'A ChRIS plugin that dynamically builds a workflow to compute length discrepencies from extremity X-Rays',
+    author              = 'FNNDSC',
+    author_email        = 'rudolph.pienaar@childrens.harvard.edu',
+    url                 = 'https://github.com/rudolphpienaar/pl-dylld',
+    py_modules          = ['dylld'],
+    install_requires    = ['chris_plugin'],
+    packages            =  ['control', 'logic', 'state'],
+    license             = 'MIT',
+    entry_points        = {
         'console_scripts': [
             'dylld = dylld:main'
         ]
     },
-    classifiers=[
+    classifiers         =[
         'License :: OSI Approved :: MIT License',
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Bio-Informatics',
         'Topic :: Scientific/Engineering :: Medical Science Apps.'
     ],
-    extras_require={
+    extras_require      ={
         'none': [],
         'dev': [
             'pytest~=7.1',
