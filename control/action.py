@@ -12,15 +12,17 @@ str_about = '''
 '''
 
 from    .                       import  jobber
+from    state                   import  data
 import  os
 import  re
 import  pudb
 import  json
 from    argparse                import ArgumentParser, Namespace
+from    chrisclient             import client
 
 class PluginRun:
     '''
-    A class wrapper about the CLI tool "chrispl-run" that POSTs a pl-pfdorun
+    A class wrapper about the CLI tool "chrispl-run" that POSTs a pl-shexec
     to CUBE.
     '''
     def __init__(self, *args, **kwargs):
@@ -46,7 +48,7 @@ class PluginRun:
         '''
         str_args : str = """
             --fileFilter=%s;
-            --exec='cp %%inputWorkingDir/%%inputWorkingFile %%outputWorkingDir/%%inputWorkingFile';
+            --exec=cp %%inputWorkingDir/%%inputWorkingFile %%outputWorkingDir/%%inputWorkingFile;
             --noJobLogging;
             --verbose=5;
             --title=%s;
@@ -70,7 +72,7 @@ class PluginRun:
         '''
         Return the CLI for the chrispl_run
         '''
-        str_cmd = """chrispl-run --plugin name=pl-pfdorun --args="%s" --onCUBE %s""" % (
+        str_cmd = """chrispl-run --plugin name=pl-shexec --args="%s" --onCUBE %s""" % (
                 self.PLpfdorun_args(str_inputData)['args'],
                 json.dumps(self.chrispl_onCUBEargs()['onCUBE'], indent = 4)
             )
@@ -115,6 +117,35 @@ class PluginRun:
             'input'             : str_input,
             'branchInstanceID'  : branchID
         }
+
+class LLDcomputeflow:
+    '''
+    A class to create / manage the LLD compute flow
+    '''
+
+    def __init__(self, *args, **kwargs):
+        self.env                : data.CUBEinstance =  None
+        self.options            : Namespace         = None
+
+        for k, v in kwargs.items():
+            if k == 'env'               : self.env                  = v
+            if k == 'options'           : self.options              = v
+
+        self.cl = client.Client('http://localhost:8000/api/v1/', 'chris', 'chris1234')
+
+    def inferenceOnInput_do(self):
+        '''
+        Generate the inference outputs on a given input
+        '''
+
+
+    def __call__(self,      filteredCopyInstanceID  : int,
+                            str_pipeline            : str,
+                            str_input               : str = "") -> dict:
+        '''
+        Execute/manage the LLD compute flow
+        '''
+        pass
 
 class Caw:
     '''
