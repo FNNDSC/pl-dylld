@@ -10,7 +10,7 @@ creates ... as output files.
 
 ## Abstract
 
-...
+Automatically calculating the lengths of human legs from XRay images can substantially improve radiological diagnosis time.
 
 ## Installation
 
@@ -63,8 +63,11 @@ docker build -t localhost/fnndsc/pl-dylld .
 Mount the source code `dylld.py` into a container to try out changes without rebuild.
 
 ```shell
-docker run --rm -it --userns=host -u $(id -u):$(id -g) \
-    -v $PWD/dylld.py:/usr/local/lib/python3.10/site-packages/dylld.py:ro \
+docker run --rm -it --userns=host  \
+    -v $PWD/dylld.py:/usr/local/lib/python3.11/site-packages/dylld.py:ro \
+    -v $PWD/control:/usr/local/lib/python3.11/site-packages/control:ro \
+    -v $PWD/logic:/usr/local/lib/python3.11/site-packages/logic:ro \
+    -v $PWD/state:/usr/local/lib/python3.11/site-packages/state:ro \
     -v $PWD/in:/incoming:ro -v $PWD/out:/outgoing:rw -w /outgoing \
     localhost/fnndsc/pl-dylld dylld /incoming /outgoing
 ```
