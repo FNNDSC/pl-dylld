@@ -9,6 +9,7 @@ str_about = '''
 from    curses      import meta
 from    pathlib     import Path
 import  json
+import  os
 
 class CUBEinstance:
     '''
@@ -19,32 +20,31 @@ class CUBEinstance:
         self.d_CUBE = {
             'user'      : 'chris',
             'password'  : 'chris1234',
-            'address'   : '192.168.1.200',
+            'address'   : '192.168.1.35',
             'port'      : '8000',
             'route'     : '/api/v1/',
             'protocol'  : 'http',
             'url'       : ''
         }
-        self.parentPluginMetafile       : str   = "pl-parent.meta.json"
         self.parentPluginInstanceID     : str   = ''
         self.str_inputdir               : str   = None
         self.str_outputdir              : str   = None
 
-    def inputdir(self, *args):
-        '''
-        get / set the inputdir
-        '''
-        if len(args):
-            self.str_inputdir   = args[0]
+    @property
+    def inputdir(self):
         return self.str_inputdir
 
-    def outputdir(self, *args):
-        '''
-        get / set the outputdir
-        '''
-        if len(args):
-            self.str_outputdir   = args[0]
+    @inputdir.setter
+    def inputdir(self, a):
+        self.str_inputdir = a
+
+    @property
+    def outputdir(self):
         return self.str_outputdir
+
+    @outputdir.setter
+    def outputdir(self, a):
+        self.str_outputdir = a
 
     def onCUBE(self) -> dict:
         '''
@@ -61,26 +61,20 @@ class CUBEinstance:
 
     def parentPluginInstanceID_discover(self) -> dict:
         '''
-        Determine the pluginInstanceID of the parent plugin. This relies on
-        the existences of a file called 'pl-parent.meta.json' in the input
-        file space. If present, this file has been injected by the CUBE system
-        and contains the ID of the parent process.
+        Determine the pluginInstanceID of the parent plugin. CUBE provides
+        several environment variables:
+
+            CHRIS_JID
+            CHRIS_PLG_INST_ID
+            CHRIS_PREV_JID
+            CHRIS_PREV_PLG_INST_ID
+
         '''
 
-        str_metaFile    : str   = '%s/pl-parent.meta.json' % self.inputdir()
-        metaFile                = Path(str_metaFile)
-        d_meta          : dict  = {}
-        str_parentID    : str   = ''
-        if metaFile.is_file():
-            with open(str_metaFile, 'r') as f:
-                d_meta          = json.load(f)
-            if 'id' in d_meta.keys():
-                str_parentID    = str(d_meta['id'])
-
-        self.parentPluginInstanceID = str_parentID
+        self.parentPluginInstanceID = os.environ['CHRIS_PREV_PLG_INST_ID']
 
         return {
-            'parentPluginInstanceID':   str_parentID
+            'parentPluginInstanceID':   self.parentPluginInstanceID
         }
 
     def url(self, *args):
