@@ -16,4 +16,8 @@ COPY . .
 ARG extras_require=none
 RUN pip install ".[${extras_require}]"
 
+RUN apt update && apt -y install telnet procps
+
+EXPOSE 7900
+
 CMD ["dylld", "--help"]
