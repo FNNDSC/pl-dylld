@@ -138,11 +138,10 @@ def tree_grow(options: Namespace, input: Path, output: Path = None) -> dict:
         LOG("Tree planted off %s" % str(input))
         d_nodeInput         = PLinputFilter(str(input))
         if d_nodeInput['status']:
-            if len(options.pipeline):
-                d_LLDflow       = LLD(  d_nodeInput['branchInstanceID'])
-                # d_caw           = CAW(  d_nodeInput['branchInstanceID'],
-                #                         options.pipeline,
-                #                         str(input))
+            d_LLDflow       = LLD(  d_nodeInput['branchInstanceID'])
+            # d_caw           = CAW(  d_nodeInput['branchInstanceID'],
+            #                         options.pipeline,
+            #                         str(input))
         else:
             LOG("Some error was returned from the node analysis!",  comms = 'error')
             LOG('stdout: %s' % d_nodeInput['run']['stdout'],        comms = 'error')
@@ -167,7 +166,7 @@ def main(options: Namespace, inputdir: Path, outputdir: Path):
 
     print(DISPLAY_TITLE)
 
-    # set_trace(term_size=(253, 62), host = '0.0.0.0', port = 7900)
+    set_trace(term_size=(253, 62), host = '0.0.0.0', port = 7900)
 
     global Env, PFMlogger, LOG, CAW, PLinputFilter
 
