@@ -131,21 +131,40 @@ class LLDcomputeflow:
             if k == 'env'               : self.env                  = v
             if k == 'options'           : self.options              = v
 
-        self.cl = client.Client('http://localhost:8000/api/v1/', 'chris', 'chris1234')
+        self.cl          : client.Client = None
+        self.cl                         = client.Client(self.env.url() , self.env.user(), self.env.password())
+        self.d_pipelines : dict         = self.cl.get_pipelines()
+        self.newTreeID   : int          = '-1'
 
-    def inferenceOnInput_do(self):
+    def inferenceOnData_do(self, inputDataNode):
         '''
         Generate the inference outputs on a given input
         '''
+        d_inference   : dict  = self.cl.get_pipelines({'name': 'Leg Length Discrepency inference'})
+        id_pipeline   : int   = d_inference['data'][0]['id']
+        d_response    : dict  = self.cl.get_pipeline_default_parameters(id_pipeline, {'limit': 1000})
+        d_nodes       : dict  = self.cl.compute_workflow_nodes_info(response['data'])
+        dwf_inference : dict  = self.cl.create_workflow(id_pipeline,
+                                    {
+                                        'previous_plugin_inst_id'   : inputDataNode,
+                                        'nodes_info'                : json.dumps(nodes)
+                                    })
+        dinf_detail   : dict  = self.cl.get_workflow_plugin_instances(
+                    dwf_inference['id'], {'limit': 1000}
+        )
 
+    def computeFlow_build(self):
+        """
+        The main controller for the compute flow logic
+        """
+        self.inferenceOnData_do(self.newTreeID)
 
-    def __call__(self,      filteredCopyInstanceID  : int,
-                            str_pipeline            : str,
-                            str_input               : str = "") -> dict:
+    def __call__(self,      filteredCopyInstanceID  : int) -> dict:
         '''
         Execute/manage the LLD compute flow
         '''
-        pass
+        self.newTreeID  : str           = filteredCopyInstanceID
+        self.computeFlow_build()
 
 class Caw:
     '''
