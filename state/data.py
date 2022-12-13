@@ -96,6 +96,20 @@ class CUBEinstance:
             )
         return self.d_CUBE['url']
 
+    def user(self, *args) -> str:
+        '''
+        get/set the CUBE user
+        '''
+        if len(args): self.d_CUBE['user']  = args[0]
+        return self.d_CUBE['user']
+
+    def password(self, *args) -> str:
+        '''
+        get/set the CUBE user
+        '''
+        if len(args): self.d_CUBE['password']  = args[0]
+        return self.d_CUBE['password']
+
     def set(self, str_key, str_val):
         '''
         set str_key to str_val
