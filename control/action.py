@@ -136,6 +136,12 @@ class LLDcomputeflow:
         self.d_pipelines : dict         = self.cl.get_pipelines()
         self.newTreeID   : int          = '-1'
 
+    def waitForNodeInWorkflow(d_workflow, node_title : str):
+        """
+        Wait for a node in a workflow to transition to a finishedState
+        """
+        pass
+
     def inferenceOnData_do(self, inputDataNode):
         '''
         Generate the inference outputs on a given input
@@ -143,13 +149,13 @@ class LLDcomputeflow:
         d_inference   : dict  = self.cl.get_pipelines({'name': 'Leg Length Discrepency inference'})
         id_pipeline   : int   = d_inference['data'][0]['id']
         d_response    : dict  = self.cl.get_pipeline_default_parameters(id_pipeline, {'limit': 1000})
-        d_nodes       : dict  = self.cl.compute_workflow_nodes_info(response['data'])
+        d_nodes       : dict  = self.cl.compute_workflow_nodes_info(d_response['data'])
         dwf_inference : dict  = self.cl.create_workflow(id_pipeline,
                                     {
                                         'previous_plugin_inst_id'   : inputDataNode,
-                                        'nodes_info'                : json.dumps(nodes)
+                                        'nodes_info'                : json.dumps(d_nodes)
                                     })
-        dinf_detail   : dict  = self.cl.get_workflow_plugin_instances(
+        dwf_detail   : dict  = self.cl.get_workflow_plugin_instances(
                     dwf_inference['id'], {'limit': 1000}
         )
 
