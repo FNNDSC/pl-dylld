@@ -117,7 +117,7 @@ class Jobber:
             if p.poll() is not None:
                 break
             if stdout:
-                str_stdoutLine = stdout.decode() + '\n'
+                str_stdoutLine = stdout.decode()
                 if int(self.args['verbosity']):
                     print(str_stdoutLine, end = '')
                 str_stdout      += str_stdoutLine
