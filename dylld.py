@@ -29,7 +29,7 @@ PLinputFilter   = None
 LOG             = None
 LLD             = None
 
-__version__     = '1.0.7'
+__version__ = '1.0.9'
 
 DISPLAY_TITLE = r"""
        _           _       _ _     _ 
@@ -55,34 +55,16 @@ parser.add_argument('-V', '--version', action='version',
                     version=f'%(prog)s {__version__}')
 
 parser.add_argument(
-            '-p', '--pattern',
+            '--pattern',
             default = '**/*dcm',
             help    = '''
             pattern for file names to include (you should quote this!)
             (this flag triggers the PathMapper on the inputdir).'''
 )
 parser.add_argument(
-            '-f', '--filter',
-            default = '*',
-            help    = '''
-            filter for file names to include (you should quote this!)
-            (this flag triggers the PathFilter on the inputdir).'''
-)
-parser.add_argument(
-            '-d', '--dirsOnly',
-            action  = 'store_true',
-            default = False,
-            help    = 'if specified, only filter directories, not files'
-)
-parser.add_argument(
-            '-P', '--pipeline',
+            '--pluginInstanceID',
             default = '',
-            help    = 'pipeline string to execute on filtered child node'
-)
-parser.add_argument(
-            '-i', '--pluginInstanceID',
-            default = '',
-            help    = 'plugin instance ID from which to grow a tree'
+            help    = 'plugin instance ID from which to start analysis'
 )
 parser.add_argument(
             '-v', '--verbosity',
@@ -99,7 +81,6 @@ def ground_prep(options: Namespace, inputdir: Path, outputdir: Path):
     Env.outputdir       = str(outputdir)
 
     PLinputFilter       = action.PluginRun(     env = Env, options = options)
-    # CAW                 = action.Caw(           env = Env, options = options)
     LLD                 = action.LLDcomputeflow(env = Env, options = options)
     LOG                 = logger.debug
 
@@ -139,9 +120,6 @@ def tree_grow(options: Namespace, input: Path, output: Path = None) -> dict:
         d_nodeInput         = PLinputFilter(str(input))
         if d_nodeInput['status']:
             d_LLDflow       = LLD(  d_nodeInput['branchInstanceID'])
-            # d_caw           = CAW(  d_nodeInput['branchInstanceID'],
-            #                         options.pipeline,
-            #                         str(input))
         else:
             LOG("Some error was returned from the node analysis!",  comms = 'error')
             LOG('stdout: %s' % d_nodeInput['run']['stdout'],        comms = 'error')
@@ -176,10 +154,6 @@ def main(options: Namespace, inputdir: Path, outputdir: Path):
         Path('%s/start.touch' % str(outputdir)).touch()
         output = None
 
-        # Testing -- if options.filter is anything other than '*'
-        # use PathFilter to filter, otherwise use the original
-        # PathMapper. This provides a convenient mechanism to test
-        # either/or object for debugging.
         mapper  = PathMapper(inputdir, outputdir,
                              globs      = [options.pattern])
 
