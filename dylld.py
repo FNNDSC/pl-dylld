@@ -136,11 +136,12 @@ def tree_grow(options: Namespace, input: Path, output: Path = None) -> dict:
     '''
     global Env, PLinputFilter, LLD, LOG
 
+    pudb.set_trace()
+
     LLD                     = action.LLDcomputeflow(env = Env, options = options)
     conditional             = behavior.Filter()
     conditional.obj_pass    = behavior.unconditionalPass
 
-    pudb.set_trace()
     LOG("Growing a tree off new data root %s..." % str(input))
     if conditional.obj_pass(str(input)):
         LOG("Tree planted off %s" % str(input))
@@ -192,8 +193,8 @@ def main(options: Namespace, inputdir: Path, outputdir: Path):
                     # mapper  = PathMapper.file_mapper(inputdir, outputdir,
                     #                     glob        = options.pattern,
                     #                     filter      = _mapper_dir_contains_factory(options.pattern))
-                    mapper  = PathMapper.file_mapper(inputdir, outputdir,
-                                        filter      = _mapper_dir_contains_factory('*dcm'))
+                    mapper  = PathMapper(inputdir, outputdir,
+                                        filter      = _mapper_dir_contains_factory(options.pattern))
                 results = pool.map(lambda t: tree_grow(options, *t), mapper)
         else:
             for input, output in mapper:
