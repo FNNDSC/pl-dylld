@@ -47,14 +47,31 @@ class PluginRun:
         '''
         Return the argument string pertinent to the pl-pfdorun plugin
         '''
-        str_args : str = """
-            --fileFilter=%s;
-            --exec=cp %%inputWorkingDir/%%inputWorkingFile %%outputWorkingDir/%%inputWorkingFile;
+        str_cp      : str   = ""
+        if not self.options.inNode:
+            str_cp  = "--exec cp %%inputWorkingDir/%%inputWorkingFile %%outputWorkingDir/%%inputWorkingFile"
+        else:
+            str_cp  = "--exec cp %s/%s %%outputWorkingDir" %\
+                 (str_input, self.options.args['pattern'])
+
+        # str_args    : str = """
+        #     --fileFilter=%s;
+        #     --exec=cp %%inputWorkingDir/%%inputWorkingFile %%outputWorkingDir/%%inputWorkingFile;
+        #     --noJobLogging;
+        #     --verbose=5;
+        #     --title=%s;
+        #     --previous_id=%s
+        # """ % (str_input, str_input, self.env.parentPluginInstanceID)
+
+        str_args    : str = """
+            --dirFilter=%s;
+            --exec=%s;
             --noJobLogging;
             --verbose=5;
             --title=%s;
             --previous_id=%s
-        """ % (str_input, str_input, self.env.parentPluginInstanceID)
+        """ % (str_input, str_cp, str_input, self.env.parentPluginInstanceID)
+
         str_args = re.sub(r';\n.*--', ';--', str_args)
         str_args = str_args.strip()
         return {
@@ -84,7 +101,9 @@ class PluginRun:
 
     def __call__(self, str_input : str) ->dict:
         '''
-        Copy the <str_input> to the output using pl-pfdorun
+        Copy the <str_input> to the output using pl-pfdorun. If the in-node
+        self.options.inNode is true, perform a bulk copy of all files in the
+        passed directory that conform to the filter.
         '''
         # Remove the '/incoming/' from the str_input
         str_inputTarget     : str   = str_input.split('/')[-1]
@@ -367,7 +386,8 @@ class LLDcomputeflow:
                         self.workflow_schedule(
                             attachToNodeID,
                             str_workflowTitle
-                        ), str_blockNodeTitle
+                        ),
+                        str_blockNodeTitle
                     )
 
     def flows_connect(
@@ -408,7 +428,6 @@ class LLDcomputeflow:
         """
         The main controller for the compute flow logic
         """
-
 
         d_ret : dict = \
         self.flow_executeAndBlockUntilNodeComplete(
