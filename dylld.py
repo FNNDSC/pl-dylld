@@ -6,30 +6,27 @@ from    argparse                import ArgumentParser, Namespace, ArgumentDefaul
 from    chris_plugin            import chris_plugin, PathMapper
 
 from    pathlib                 import Path
-import  logging
-from    pflogf                  import FnndscLogFormatter
 
 import  os
 import  pudb
+from    pudb.remote             import set_trace
 
 from    loguru                  import logger
-
-from    pudb.remote             import set_trace
+from    concurrent.futures      import ThreadPoolExecutor
+from    typing                  import Callable
 
 from    state                   import data
 from    logic                   import behavior
 from    control                 import action
 from    control.filter          import PathFilter
 
-import  pfmisc
-from    pfmisc._colors          import Colors
 
 Env             = data.CUBEinstance()
 PLinputFilter   = None
 LOG             = None
 LLD             = None
 
-__version__ = '1.0.9'
+__version__ = '1.0.13'
 
 DISPLAY_TITLE = r"""
        _           _       _ _     _ 
@@ -67,10 +64,38 @@ parser.add_argument(
             help    = 'plugin instance ID from which to start analysis'
 )
 parser.add_argument(
-            '-v', '--verbosity',
+            '--verbosity',
             default = '0',
             help    = 'verbosity level of app'
 )
+parser.add_argument(
+            "--thread",
+            help    = "use threading to branch in parallel",
+            dest    = 'thread',
+            action  = 'store_true',
+            default = False)
+parser.add_argument(
+            "--inNode",
+            help    = "perform in-node implicit parallelization",
+            dest    = 'inNode',
+            action  = 'store_true',
+            default = False)
+
+def _mapper_dir_contains_factory(glob: str) -> Callable[[Path], bool]:
+    """
+    Creates a function suitable for use with a ``PathMapper``.
+    That function returns true if its path argument is a directory
+    containing a file which matches the given glob.
+    """
+
+    def _dir_contains(path: Path) -> bool:
+        if not path.is_dir():
+            return False
+        match = path.glob(glob)
+        return next(match, None) is not None
+
+    return _dir_contains
+
 
 def ground_prep(options: Namespace, inputdir: Path, outputdir: Path):
     '''
@@ -81,7 +106,6 @@ def ground_prep(options: Namespace, inputdir: Path, outputdir: Path):
     Env.outputdir       = str(outputdir)
 
     PLinputFilter       = action.PluginRun(     env = Env, options = options)
-    LLD                 = action.LLDcomputeflow(env = Env, options = options)
     LOG                 = logger.debug
 
     LOG("Starting growth cycle...")
@@ -112,9 +136,12 @@ def tree_grow(options: Namespace, input: Path, output: Path = None) -> dict:
     '''
     global Env, PLinputFilter, LLD, LOG
 
+    LLD                     = action.LLDcomputeflow(env = Env, options = options)
     conditional             = behavior.Filter()
     conditional.obj_pass    = behavior.unconditionalPass
 
+    pudb.set_trace()
+    LOG("Growing a tree off new data root %s..." % str(input))
     if conditional.obj_pass(str(input)):
         LOG("Tree planted off %s" % str(input))
         d_nodeInput         = PLinputFilter(str(input))
@@ -147,19 +174,29 @@ def main(options: Namespace, inputdir: Path, outputdir: Path):
     set_trace(term_size=(253, 62), host = '0.0.0.0', port = 7900)
 
     global Env, PFMlogger, LOG, CAW, PLinputFilter
-
     ground_prep(options, inputdir, outputdir)
     if len(Env.parentPluginInstanceID):
         LOG("Sewing seeds...")
         Path('%s/start.touch' % str(outputdir)).touch()
         output = None
 
-        mapper  = PathMapper(inputdir, outputdir,
-                             globs      = [options.pattern])
-
-        for input, output in mapper:
-            if input.is_file():
-                LOG("Growing a tree off new data root %s..." % str(input))
+        if int(options.thread):
+            with ThreadPoolExecutor(max_workers=len(os.sched_getaffinity(0))) as pool:
+                if not options.inNode:
+                    mapper  = PathMapper.file_mapper(inputdir, outputdir,
+                                        globs       = [options.pattern])
+                else:
+                    # mapper  = PathMapper.file_mapper(inputdir, outputdir,
+                    #                     glob        = options.pattern,
+                    #                     filter      = _mapper_dir_contains_factory('*dcm'))
+                    # mapper  = PathMapper.file_mapper(inputdir, outputdir,
+                    #                     glob        = options.pattern,
+                    #                     filter      = _mapper_dir_contains_factory(options.pattern))
+                    mapper  = PathMapper.file_mapper(inputdir, outputdir,
+                                        filter      = _mapper_dir_contains_factory('*dcm'))
+                results = pool.map(lambda t: tree_grow(options, *t), mapper)
+        else:
+            for input, output in mapper:
                 tree_grow(options, input, output)
 
     LOG("Ending growth cycle...")
