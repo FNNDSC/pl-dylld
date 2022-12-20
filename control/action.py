@@ -47,30 +47,21 @@ class PluginRun:
         '''
         Return the argument string pertinent to the pl-pfdorun plugin
         '''
-        str_cp      : str   = ""
+        pudb.set_trace()
+        str_filter  : str   = ""
         if not self.options.inNode:
-            str_cp  = "--exec cp %%inputWorkingDir/%%inputWorkingFile %%outputWorkingDir/%%inputWorkingFile"
+            str_filter  = "--fileFilter=%s" % str_input
         else:
-            str_cp  = "--exec cp %s/%s %%outputWorkingDir" %\
-                 (str_input, self.options.args['pattern'])
-
-        # str_args    : str = """
-        #     --fileFilter=%s;
-        #     --exec=cp %%inputWorkingDir/%%inputWorkingFile %%outputWorkingDir/%%inputWorkingFile;
-        #     --noJobLogging;
-        #     --verbose=5;
-        #     --title=%s;
-        #     --previous_id=%s
-        # """ % (str_input, str_input, self.env.parentPluginInstanceID)
+            str_filter  = "--dirFilter=%s" % str_input
 
         str_args    : str = """
-            --dirFilter=%s;
-            --exec=%s;
+            %s;
+            --exec=cp %%inputWorkingDir/%%inputWorkingFile %%outputWorkingDir/%%inputWorkingFile;
             --noJobLogging;
             --verbose=5;
             --title=%s;
             --previous_id=%s
-        """ % (str_input, str_cp, str_input, self.env.parentPluginInstanceID)
+        """ % (str_filter, str_input, self.env.parentPluginInstanceID)
 
         str_args = re.sub(r';\n.*--', ';--', str_args)
         str_args = str_args.strip()
