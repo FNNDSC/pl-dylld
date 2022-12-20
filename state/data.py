@@ -20,7 +20,7 @@ class CUBEinstance:
         self.d_CUBE = {
             'user'      : 'chris',
             'password'  : 'chris1234',
-            'address'   : '192.168.1.35',
+            'address'   : '10.72.8.224',
             'port'      : '8000',
             'route'     : '/api/v1/',
             'protocol'  : 'http',
