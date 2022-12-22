@@ -64,6 +64,36 @@ parser.add_argument(
             help    = 'plugin instance ID from which to start analysis'
 )
 parser.add_argument(
+            '--CUBEIP',
+            default = '192.168.1.200',
+            help    = 'CUBE IP address'
+)
+parser.add_argument(
+            '--CUBEport',
+            default = '8000',
+            help    = 'CUBE port'
+)
+parser.add_argument(
+            '--orthancIP',
+            default = 'https://orthanc-chris-public.apps.ocp-prod.massopen.cloud/',
+            help    = 'Orthanc to receive analysis results'
+)
+parser.add_argument(
+            '--orthancuser',
+            default = 'fnndsc',
+            help    = 'Orthanc username'
+)
+parser.add_argument(
+            '--orthancpassword',
+            default = 'Lerkyacyids5',
+            help    = 'Orthanc password'
+)
+parser.add_argument(
+            '--orthancremote',
+            default = '',
+            help    = 'remote orthanc modality'
+)
+parser.add_argument(
             '--verbosity',
             default = '0',
             help    = 'verbosity level of app'
@@ -104,6 +134,8 @@ def ground_prep(options: Namespace, inputdir: Path, outputdir: Path):
     global Env, LOG, LLD, PLinputFilter
     Env.inputdir        = str(inputdir)
     Env.outputdir       = str(outputdir)
+    Env.port            = str(options.CUBEport)
+    Env.IP              = str(options.CUBEIP)
 
     PLinputFilter       = action.PluginRun(     env = Env, options = options)
     LOG                 = logger.debug
@@ -187,12 +219,6 @@ def main(options: Namespace, inputdir: Path, outputdir: Path):
                     mapper  = PathMapper.file_mapper(inputdir, outputdir,
                                         globs       = [options.pattern])
                 else:
-                    # mapper  = PathMapper.file_mapper(inputdir, outputdir,
-                    #                     glob        = options.pattern,
-                    #                     filter      = _mapper_dir_contains_factory('*dcm'))
-                    # mapper  = PathMapper.file_mapper(inputdir, outputdir,
-                    #                     glob        = options.pattern,
-                    #                     filter      = _mapper_dir_contains_factory(options.pattern))
                     mapper  = PathMapper(inputdir, outputdir,
                                         filter      = _mapper_dir_contains_factory(options.pattern))
                 results = pool.map(lambda t: tree_grow(options, *t), mapper)
