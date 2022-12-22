@@ -7,7 +7,7 @@ from    chris_plugin            import chris_plugin, PathMapper
 
 from    pathlib                 import Path
 
-import  os
+import  os, sys
 import  pudb
 from    pudb.remote             import set_trace
 
@@ -21,7 +21,8 @@ from    control                 import action
 from    control.filter          import PathFilter
 
 
-Env             = data.CUBEinstance()
+# Env             = data.CUBEinstance()
+Env             = data.env()
 PLinputFilter   = None
 LOG             = None
 LLD             = None
@@ -126,16 +127,23 @@ def _mapper_dir_contains_factory(glob: str) -> Callable[[Path], bool]:
 
     return _dir_contains
 
+def world_make(options: Namespace, inputdir: Path, outputdir: Path):
+    global Env
+    Env.CUBE.inputdir        = str(inputdir)
+    Env.CUBE.outputdir       = str(outputdir)
+    Env.CUBE.port            = str(options.CUBEport)
+    Env.CUBE.IP              = str(options.CUBEIP)
+
+    Env.orthanc.address     = options.orthancIP
+    Env.orthanc.user        = options.orthancuser
+    Env.orthanc.password    = options.orthancpassword
+    Env.orthanc.remote      = options.orthancremote
 
 def ground_prep(options: Namespace, inputdir: Path, outputdir: Path):
     '''
     Perform some setup and initial LOG output
     '''
     global Env, LOG, LLD, PLinputFilter
-    Env.inputdir        = str(inputdir)
-    Env.outputdir       = str(outputdir)
-    Env.port            = str(options.CUBEport)
-    Env.IP              = str(options.CUBEIP)
 
     PLinputFilter       = action.PluginRun(     env = Env, options = options)
     LOG                 = logger.debug
@@ -156,9 +164,18 @@ def ground_prep(options: Namespace, inputdir: Path, outputdir: Path):
     LOG("outputdir = %s" % str(outputdir))
 
     if len(options.pluginInstanceID):
-        Env.parentPluginInstanceID  = options.pluginInstanceID
+        Env.CUBE.parentPluginInstanceID  = options.pluginInstanceID
     else:
-        Env.parentPluginInstanceID  = Env.parentPluginInstanceID_discover()['parentPluginInstanceID']
+        Env.CUBE.parentPluginInstanceID  = \
+            Env.CUBE.parentPluginInstanceID_discover()['parentPluginInstanceID']
+    if not len(Env.CUBE.parentPluginInstanceID):
+        return False
+    else:
+        return True
+
+def init(options: Namespace, inputdir: Path, outputdir: Path) -> bool:
+    world_make(options, inputdir, outputdir)
+    return ground_prep(options, inputdir, outputdir)
 
 def tree_grow(options: Namespace, input: Path, output: Path = None) -> dict:
     '''
@@ -201,33 +218,32 @@ def main(options: Namespace, inputdir: Path, outputdir: Path):
     :param inputdir: directory containing input files (read-only)
     :param outputdir: directory where to write output files
     """
-
+    global LOG
     print(DISPLAY_TITLE)
 
     set_trace(term_size=(253, 62), host = '0.0.0.0', port = 7900)
 
-    global Env, PFMlogger, LOG, CAW, PLinputFilter
-    ground_prep(options, inputdir, outputdir)
-    if len(Env.parentPluginInstanceID):
-        LOG("Sewing seeds...")
-        Path('%s/start.touch' % str(outputdir)).touch()
-        output = None
+    if not init(options, inputdir, outputdir): sys.exit(1)
 
-        if int(options.thread):
-            with ThreadPoolExecutor(max_workers=len(os.sched_getaffinity(0))) as pool:
-                if not options.inNode:
-                    mapper  = PathMapper.file_mapper(inputdir, outputdir,
-                                        globs       = [options.pattern])
-                else:
-                    mapper  = PathMapper(inputdir, outputdir,
-                                        filter      = _mapper_dir_contains_factory(options.pattern))
-                results = pool.map(lambda t: tree_grow(options, *t), mapper)
-        else:
-            for input, output in mapper:
-                tree_grow(options, input, output)
+    LOG("Sewing seeds...")
+    Path('%s/start.touch' % str(outputdir)).touch()
+    output = None
+    # Are we processing all the data in one tree (i.e. inNode)
+    # or will every data element have its own tree?
+    if not options.inNode:
+        mapper  = PathMapper.file_mapper(inputdir, outputdir,
+                            glob        = options.pattern)
+    else:
+        mapper  = PathMapper(inputdir, outputdir,
+                            filter      = _mapper_dir_contains_factory(options.pattern))
+    if int(options.thread):
+        with ThreadPoolExecutor(max_workers=len(os.sched_getaffinity(0))) as pool:
+            results = pool.map(lambda t: tree_grow(options, *t), mapper)
+    else:
+        for input, output in mapper:
+            tree_grow(options, input, output)
 
     LOG("Ending growth cycle...")
-
 
 if __name__ == '__main__':
     main()
