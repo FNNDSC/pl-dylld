@@ -65,7 +65,7 @@ class PluginRun:
             --verbose=5;
             --title=%s;
             --previous_id=%s
-        """ % (str_filter, str_input, self.env.parentPluginInstanceID)
+        """ % (str_filter, str_input, self.env.CUBE.parentPluginInstanceID)
 
         str_args = re.sub(r';\n.*--', ';--', str_args)
         str_args = str_args.strip()
@@ -78,7 +78,7 @@ class PluginRun:
         Return a string specifying the CUBE instance
         '''
         return {
-            'onCUBE':  json.dumps(self.env.onCUBE())
+            'onCUBE':  json.dumps(self.env.CUBE.onCUBE())
         }
 
     def chrispl_run_cmd(self, str_inputData : str) -> dict:
@@ -139,7 +139,7 @@ class LLDcomputeflow:
     '''
 
     def __init__(self, *args, **kwargs):
-        self.env                : data.CUBEinstance =  None
+        self.env                : data.env          =  None
         self.options            : Namespace         = None
 
         for k, v in kwargs.items():
@@ -147,7 +147,7 @@ class LLDcomputeflow:
             if k == 'options'           : self.options              = v
 
         self.cl         : client.Client = None
-        self.cl                         = client.Client(self.env.url() , self.env.user(), self.env.password())
+        self.cl                         = client.Client(self.env.CUBE.url() , self.env.CUBE.user(), self.env.CUBE.password())
         self.d_pipelines        : dict  = self.cl.get_pipelines()
         self.pltopo             : int   = self.cl.get_plugins({'name': 'pl-topologicalcopy'})
         self.newTreeID          : int   = -1
@@ -228,7 +228,12 @@ class LLDcomputeflow:
             'id'            : id_pipeline
         }
 
-    def workflow_schedule(self, inputDataNodeID : str, str_pipelineName : str):
+    def workflow_schedule(
+        self,
+        inputDataNodeID     : str,
+        str_pipelineName    : str,
+        ld_nodeArgs         : list  = []
+    ) -> dict:
         '''
         Schedule a workflow that has name <str_pipelineName> off a given node id
         of <inputDataNodeID>.
