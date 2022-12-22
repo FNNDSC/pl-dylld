@@ -21,6 +21,24 @@ class env:
         '''
         Constructor
         '''
+        self._CUBE      = CUBEinstance()
+        self._orthanc   = Orthancinstance()
+
+    @property
+    def CUBE(self):
+        return self._CUBE
+
+    @CUBE.setter
+    def CUBE(self, a):
+        self._CUBE       = a
+
+    @property
+    def orthanc(self):
+        return self._orthanc
+
+    @orthanc.setter
+    def orthanc(self, a):
+        self._orthanc    = a
 
 class CUBEinstance:
     '''
