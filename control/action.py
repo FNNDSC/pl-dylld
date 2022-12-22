@@ -49,10 +49,14 @@ class PluginRun:
         '''
         pudb.set_trace()
         str_filter  : str   = ""
+        # Remove any '*' and/or '/' chars from pattern search. This will
+        # transform a string of '**/*dcm" to just 'dcm', suitable for pl-shexec
+        str_ff      : str   = re.subn(r'[*/]', '', self.options.pattern)[0]
         if not self.options.inNode:
             str_filter  = "--fileFilter=%s" % str_input
         else:
             str_filter  = "--dirFilter=%s" % str_input
+            if len(str_ff): str_filter += ";--fileFilter=%s" % str_ff
 
         str_args    : str = """
             %s;
