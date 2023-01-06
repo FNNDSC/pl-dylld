@@ -7,7 +7,7 @@ from    chris_plugin            import chris_plugin, PathMapper
 
 from    pathlib                 import Path
 
-import  os
+import  os, sys
 import  pudb
 from    pudb.remote             import set_trace
 
@@ -282,21 +282,25 @@ def main(options: Namespace, inputdir: Path, outputdir: Path):
         Path('%s/start.touch' % str(outputdir)).touch()
         output = None
 
-        if int(options.thread):
-            with ThreadPoolExecutor(max_workers=len(os.sched_getaffinity(0))) as pool:
-                if not options.inNode:
-                    mapper  = PathMapper.file_mapper(inputdir, outputdir,
-                                        globs       = [options.pattern])
-                else:
-                    mapper  = PathMapper(inputdir, outputdir,
-                                        filter      = _mapper_dir_contains_factory(options.pattern))
-                results = pool.map(lambda t: tree_grow(options, *t), mapper)
-        else:
-            for input, output in mapper:
-                tree_grow(options, input, output)
+    LOG("Sewing seeds...")
+    Path('%s/start.touch' % str(outputdir)).touch()
+    output = None
+    # Are we processing all the data in one tree (i.e. inNode)
+    # or will every data element have its own tree?
+    if not options.inNode:
+        mapper  = PathMapper.file_mapper(inputdir, outputdir,
+                            glob        = options.pattern)
+    else:
+        mapper  = PathMapper(inputdir, outputdir,
+                            filter      = _mapper_dir_contains_factory(options.pattern))
+    if int(options.thread):
+        with ThreadPoolExecutor(max_workers=len(os.sched_getaffinity(0))) as pool:
+            results = pool.map(lambda t: tree_grow(options, *t), mapper)
+    else:
+        for input, output in mapper:
+            tree_grow(options, input, output)
 
     LOG("Ending growth cycle...")
-
 
 if __name__ == '__main__':
     main()

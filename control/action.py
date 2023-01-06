@@ -139,7 +139,7 @@ class LLDcomputeflow:
     '''
 
     def __init__(self, *args, **kwargs):
-        self.env                : data.CUBEinstance =  None
+        self.env                : data.env          =  None
         self.options            : Namespace         = None
 
         for k, v in kwargs.items():
@@ -148,7 +148,7 @@ class LLDcomputeflow:
 
         self.cl         : client.Client = None
         self.cl                         = client.Client(
-                                            self.env.CUBE.url() ,
+                                            self.env.CUBE.url(),
                                             self.env.CUBE.user(),
                                             self.env.CUBE.password()
                                         )
