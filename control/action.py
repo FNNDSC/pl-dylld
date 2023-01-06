@@ -47,7 +47,7 @@ class PluginRun:
         '''
         Return the argument string pertinent to the pl-pfdorun plugin
         '''
-        pudb.set_trace()
+        # pudb.set_trace()
         str_filter  : str   = ""
         # Remove any '*' and/or '/' chars from pattern search. This will
         # transform a string of '**/*dcm" to just 'dcm', suitable for pl-shexec
@@ -65,7 +65,7 @@ class PluginRun:
             --verbose=5;
             --title=%s;
             --previous_id=%s
-        """ % (str_filter, str_input, self.env.parentPluginInstanceID)
+        """ % (str_filter, str_input, self.env.CUBE.parentPluginInstanceID)
 
         str_args = re.sub(r';\n.*--', ';--', str_args)
         str_args = str_args.strip()
@@ -78,7 +78,7 @@ class PluginRun:
         Return a string specifying the CUBE instance
         '''
         return {
-            'onCUBE':  json.dumps(self.env.onCUBE())
+            'onCUBE':  json.dumps(self.env.CUBE.onCUBE())
         }
 
     def chrispl_run_cmd(self, str_inputData : str) -> dict:
@@ -147,20 +147,45 @@ class LLDcomputeflow:
             if k == 'options'           : self.options              = v
 
         self.cl         : client.Client = None
-        self.cl                         = client.Client(self.env.url() , self.env.user(), self.env.password())
+        self.cl                         = client.Client(
+                                            self.env.CUBE.url() ,
+                                            self.env.CUBE.user(),
+                                            self.env.CUBE.password()
+                                        )
         self.d_pipelines        : dict  = self.cl.get_pipelines()
         self.pltopo             : int   = self.cl.get_plugins({'name': 'pl-topologicalcopy'})
         self.newTreeID          : int   = -1
         self.ld_workflowhist    : list  = []
         self.ld_topologicalNode : dict  = {'data': []}
 
-    def pluginInstanceID_findWithTitle(self, d_workflowDetail : dict, node_title : str) -> int:
+    def pluginInstanceID_findWithTitle(self,
+            d_workflowDetail    : dict,
+            node_title          : str
+        ) -> int:
         """
-        Determine the plugin instance id in the workflow detail that has
+        Determine the plugin instance id in the `d_workflowDetail` that has
         title substring <node_title>. If the d_workflowDetail is simply a plugin
         instance, return its id provided it has the <node_title>.
+
+        Args:
+            d_workflowDetail (dict):    workflow detail data structure
+            node_title (str):           the node to find
+
+        Returns:
+            int: id of the found node, or -1
         """
-        def plugin_hasTitle(d_plinfo, title):
+        def plugin_hasTitle(d_plinfo : dict, title : str) -> bool:
+            """
+            Does this node (`d_plinfo`) have this `title`?
+
+            Args:
+                d_plinfo (dict): the plugin data description
+                title (str):     the name of this node
+
+            Returns:
+                bool: yay or nay
+            """
+
             nonlocal pluginIDwithTitle
             if title.lower() in d_plinfo['title'].lower():
                 pluginIDwithTitle   = d_plinfo['id']
@@ -178,9 +203,22 @@ class LLDcomputeflow:
 
         return pluginIDwithTitle
 
-    def waitForNodeInWorkflow(self, d_workflowDetail, node_title : str):
+    def waitForNodeInWorkflow(self,
+            d_workflowDetail    : dict,
+            node_title          : str
+        ) -> dict:
         """
         Wait for a node in a workflow to transition to a finishedState
+
+        Args:
+            d_workflowDetail (dict): the workflow in which the node
+                                     exists
+            node_title (str):        the title of the node to find
+
+        Future: expand to wait on list of node_titles
+
+        Returns:
+            dict: _description_
         """
         waitPoll        : int   = 5
         totalPolls      : int   = 100
@@ -208,11 +246,55 @@ class LLDcomputeflow:
             'plid'      : waitOnPluginID
         }
 
-    def pipelineWithName_getNodes(self, str_pipelineName):
+    def pluginParameters_setInNodes(self,
+            d_piping            : dict,
+            d_pluginParameters  : dict
+        ) -> dict:
+        """
+        Override default parameters in the `d_piping`
+
+        Args:
+            d_piping (dict):            the current default parameters for the
+                                        plugins in a pipeline
+            d_pluginParameters (dict):  a list of plugins and parameters to
+                                        set in the response
+
+        Returns:
+            dict:   a new piping structure with changes to some parameter values
+                    if required. If no d_pluginParameters is passed, simply
+                    return the piping unchanged.
+
+        """
+        for pluginTitle,d_parameters in d_pluginParameters.items():
+            for piping in d_piping:
+                if pluginTitle in piping.get('title'):
+                    for k,v in d_parameters.items():
+                        for d_default in piping.get('plugin_parameter_defaults'):
+                            if k in d_default.get('name'):
+                                d_default['default'] = v
+        return d_piping
+
+    def pipelineWithName_getNodes(
+            self,
+            str_pipelineName    : str,
+            d_pluginParameters  : dict  = {}
+        ) -> dict :
         """
         Find a pipeline that contains the passed name <str_pipelineName>
-        and if found, return a nodes dictionary.
+        and if found, return a nodes dictionary. Optionally set relevant
+        plugin parameters to values described in <d_pluginParameters>
+
+
+        Args:
+            str_pipelineName (str):         the name of the pipeline to find
+            d_pluginParameters (dict):      a set of optional plugin parameter
+                                            overrides
+
+        Returns:
+            dict: node dictionary (name, compute env, default parameters)
+                  and id of the pipeline
         """
+        # pudb.set_trace()
         id_pipeline     : int   = -1
         d_nodes         : dict  = {}
         d_pipeline      : dict  = self.cl.get_pipelines({'name': str_pipelineName})
@@ -222,18 +304,35 @@ class LLDcomputeflow:
                                         id_pipeline, {'limit': 1000}
                                 )
             if 'data' in d_response:
-                d_nodes : dict  = self.cl.compute_workflow_nodes_info(d_response['data'])
+                d_nodes : dict  = self.pluginParameters_setInNodes(
+                        self.cl.compute_workflow_nodes_info(d_response['data'], True),
+                        d_pluginParameters)
         return {
             'nodes'         : d_nodes,
             'id'            : id_pipeline
         }
 
-    def workflow_schedule(self, inputDataNodeID : str, str_pipelineName : str):
-        '''
+    def workflow_schedule(self,
+            inputDataNodeID     : str,
+            str_pipelineName    : str,
+            d_pluginParameters  : dict  = {}
+        ) -> dict:
+        """
         Schedule a workflow that has name <str_pipelineName> off a given node id
         of <inputDataNodeID>.
-        '''
-        d_pipeline      : dict  = self.pipelineWithName_getNodes(str_pipelineName)
+
+        Args:
+            inputDataNodeID (str):      id of parent node
+            str_pipelineName (str):     substring of workflow name to connect
+            d_pluginParameters (dict):  optional structure of default parameter
+                                        overrides
+
+        Returns:
+            dict: result from calling the client `get_workflow_plugin_instances`
+        """
+        d_pipeline      : dict  = self.pipelineWithName_getNodes(
+                                    str_pipelineName, d_pluginParameters
+                                )
         d_workflow      : dict  = self.cl.create_workflow(
                 d_pipeline['id'],
                 {
@@ -251,9 +350,22 @@ class LLDcomputeflow:
         })
         return d_workflowInst
 
-    def topologicalNode_run(self, str_nodeTitle : str, l_nodes : list, str_filterArgs):
+    def topologicalNode_run(self,
+            str_nodeTitle   : str,
+            l_nodes         : list,
+            str_filterArgs
+        ) -> dict:
         """
         Perform a toplogical join between nodes
+
+        Args:
+            str_nodeTitle (str):        title of this join node
+            l_nodes (list):             list of node ids to join
+                                        (logical parent is node[0])
+            str_filterArgs (_type_):    CLI filter arguments
+
+        Returns:
+            dict: the plugin instance creation data structure
         """
         idTopo          : int   = self.pltopo['data'][0]['id']
         d_plInstTopo    : dict  = self.cl.create_plugin_instance(
@@ -278,7 +390,15 @@ class LLDcomputeflow:
         )
         return d_topological_done
 
-    def parentNode_isFinished(self, *args):
+    def parentNode_isFinished(self, *args) -> bool:
+        """
+        Check if the parent node is finished at this instance. Return
+        appropriate bool.
+
+        Returns:
+            bool: is parent done? True or False
+
+        """
         d_parent            : dict          = None
         b_finished          : bool          = False
         if len(args)        : d_parent      = args[0]
@@ -286,10 +406,16 @@ class LLDcomputeflow:
         else                : b_finished    = d_parent['finished']
         return b_finished
 
-    def parentNode_IDappend(self, l_nodes, *args) -> list:
+    def parentNode_IDappend(self, l_nodes : list, *args) -> list:
         """
         Append the node ID of the parent in the *args to l_nodes and
         return the new list
+
+        Args:
+            l_nodes (list): a list of node IDs
+
+        Returns:
+            list: the parent id appended to the end of the list
         """
         d_parent            : dict          = None
         if len(args):
@@ -299,7 +425,11 @@ class LLDcomputeflow:
 
     def parentNode_IDget(self, *args) -> int:
         """
-        Simply get the plugin instance of the passed parent node
+
+                Simply get the plugin instance of the passed parent node
+
+        Returns:
+            int: parent plugin instance id of passed `d_parent` structure
         """
         id                  : int           = -1
         d_parent            : dict          = None
@@ -308,12 +438,20 @@ class LLDcomputeflow:
             id          = d_parent['plinst']['id']
         return id
 
-    def pluginID_findInWorkflowDesc(self, tp_workflowAndNode) -> int :
+    def pluginID_findInWorkflowDesc(self, tp_workflowAndNode : tuple) -> int :
         """
         Given a tuple of (<workflowName>, <nodeName>) substrings,
         return the corresponding plugin instance id of node
         <nodeName> in workflow <workflowName>. Handle the special case
         when the "workflow" is a "topological" node.
+
+        Args:
+            tp_workflowAndNode (tuple): two tuple element containing substrings
+                                        describing a workflow and a node within
+                                        that workflow
+
+        Returns:
+            int: the plugin instance ID of the found node, otherwise -1
         """
         pluginID    : int       = -1
         l_hit       : list      = []
@@ -334,12 +472,20 @@ class LLDcomputeflow:
                         )
         return pluginID
 
-    def nodeIDs_verify(self, l_nodeID):
+    def nodeIDs_verify(self, l_nodeID : list) -> list:
         """
+
         Verify that a list of <l_nodeID> contains only int
         types. This will map any 'distalNodeIDs' that are string
         tuples of (<workflow>, <nodeTitle>) to the corrsponding
         plugin instance id
+
+
+        Args:
+            l_nodeID (list): node list to verify
+
+        Returns:
+            list: list containing only node IDs
         """
         l_nodeID = [self.pluginID_findInWorkflowDesc(x) for x in l_nodeID]
         return l_nodeID
@@ -362,17 +508,21 @@ class LLDcomputeflow:
         these nodes with 'waitForNodeWithTitle' enters the finished
         state. Note that this state can be 'finishedSuccessfully' or
         'finishedWithError'.
+
+        Possible future extension: block until node _list_ complete
         """
         d_prior             : dict  = None
         str_workflowTitle   : str   = "no workflow title"
         attachToNodeID      : int   = -1
         str_blockNodeTitle  : str   = "no node title"
         b_canFlow           : bool  = False
+        d_pluginParameters  : dict  = {}
 
         for k, v in kwargs.items():
             if k == 'workflowTitle'         :   str_workflowTitle   = v
             if k == 'attachToNodeID'        :   attachToNodeID      = v
             if k == 'waitForNodeWithTitle'  :   str_blockNodeTitle  = v
+            if k == 'pluginParameters'      :   d_pluginParameters  = v
 
         if self.parentNode_isFinished(*args):
             if attachToNodeID == -1:
@@ -380,7 +530,8 @@ class LLDcomputeflow:
             return  self.waitForNodeInWorkflow(
                         self.workflow_schedule(
                             attachToNodeID,
-                            str_workflowTitle
+                            str_workflowTitle,
+                            d_pluginParameters
                         ),
                         str_blockNodeTitle
                     )
@@ -388,10 +539,14 @@ class LLDcomputeflow:
     def flows_connect(
         self,
         *args,
-        **kwargs):
+        **kwargs) -> dict:
         """
         Perform a toplogical join by using the args[0] as logical
         parent and connect this parent to a list of distalNodeIDs
+
+
+        Returns:
+            dict: data structure on the nodes_join operation
         """
         d_prior             : dict  = None
         str_joinNodeTitle   : str   = "no title specified for topo node"
@@ -419,10 +574,18 @@ class LLDcomputeflow:
             )
         return d_ret
 
-    def computeFlow_build(self):
+    def computeFlow_build(self) -> dict:
+        """The main controller for the compute flow logic
+
+        Somewhat pedantically, this method demonstrates how to inject
+        override parameters for certain plugin parameters in the
+        workflow.
+
+        Returns:
+            dict: a composite structure of the last call executed.
         """
-        The main controller for the compute flow logic
-        """
+
+        self.env.set_trace()
 
         d_ret : dict = \
         self.flow_executeAndBlockUntilNodeComplete(
@@ -434,7 +597,18 @@ class LLDcomputeflow:
                                 self.flow_executeAndBlockUntilNodeComplete(
                                     attachToNodeID          = self.newTreeID,
                                     workflowTitle           = 'Leg Length Discrepency inference',
-                                    waitForNodeWithTitle    = 'heatmaps'
+                                    waitForNodeWithTitle    = 'heatmaps',
+                                    pluginParameters        = {
+                                        'dcm-to-mha'  : {
+                                                    'imageName'         : 'composite.png',
+                                                    'rotate'            : '90'
+                                        },
+                                        'generate-landmark-heatmaps' : {
+                                                    'heatmapThreshold' : '0.5',
+                                                    'imageType'        : 'jpg',
+                                                    'compositeWeight'  : '0.3,0.7'
+                                        }
+                                    }
                                 ),
                                 connectionNodeTitle     = 'mergeDICOMSwithInference',
                                 distalNodeIDs           = [self.newTreeID],
@@ -455,15 +629,29 @@ class LLDcomputeflow:
                 topoJoinArgs            = '\.dcm$,\.png$'
             ),
             workflowTitle           = 'PNG-to-DICOM',
-            waitForNodeWithTitle    = 'pacs-push'
+            waitForNodeWithTitle    = 'pacs-push',
+            pluginParameters        = {
+                'dicom-push'    : {
+                    'orthancUrl'    : self.env.orthanc.url(),
+                    'username'      : self.env.orthanc.username,
+                    'password'      : self.env.orthanc.password
+                }
+            }
         )
         # pudb.set_trace()
         return d_ret
 
-    def __call__(self,      filteredCopyInstanceID  : int) -> dict:
-        '''
-        Execute/manage the LLD compute flow
-        '''
+    def __call__(self, filteredCopyInstanceID  : int) -> dict:
+        """        Execute/manage the LLD compute flow
+
+
+        Args:
+            filteredCopyInstanceID (int): the plugin instance ID in the feed tree
+                                          from which to grow the compute flow
+
+        Returns:
+            dict: the compute flow data structure
+        """
         self.newTreeID  : str           = int(filteredCopyInstanceID)
         d_computeFlow   : dict          = self.computeFlow_build()
         return d_computeFlow
