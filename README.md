@@ -5,8 +5,7 @@
 [![ci](https://github.com/FNNDSC/pl-dylld/actions/workflows/ci.yml/badge.svg)](https://github.com/FNNDSC/pl-dylld/actions/workflows/ci.yml)
 
 `pl-dylld` is a [_ChRIS_](https://chrisproject.org/)
-_ds_ plugin which takes in ...  as input files and
-creates ... as output files.
+_ds_ plugin which connects to a parent node containing DICOM images and then dynamically creates a responsive compute flow (including joins). In its output directory, `pl-dylld` generates various logging/tracking data.
 
 ## Abstract
 
