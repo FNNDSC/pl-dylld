@@ -30,7 +30,7 @@ PLinputFilter   = None
 LOG             = None
 LLD             = None
 
-__version__ = '3.2.0'
+__version__ = '3.2.6'
 
 DISPLAY_TITLE = r"""
        _           _       _ _     _ 
@@ -78,14 +78,9 @@ parser.add_argument(
             help    = 'CUBE port'
 )
 parser.add_argument(
-            '--orthancIP',
+            '--orthancURL',
             default = 'https://orthanc-chris-public.apps.ocp-prod.massopen.cloud/',
             help    = 'IP of the orthanc to receive analysis results'
-)
-parser.add_argument(
-            '--orthancport',
-            default = '',
-            help    = 'Orthanc DICOM port'
 )
 parser.add_argument(
             '--orthancuser',
@@ -172,10 +167,8 @@ def Env_setup(options: Namespace, inputdir: Path, outputdir: Path):
     global Env
     Env.CUBE.inputdir       = str(inputdir)
     Env.CUBE.outputdir      = str(outputdir)
-    Env.CUBE.port           = str(options.CUBEport)
-    Env.CUBE.IP             = str(options.CUBEIP)
-    Env.orthanc.IP          = str(options.orthancIP)
-    Env.orthanc.port        = str(options.orthancport)
+    Env.orthanc.url         = str(options.orthancURL)
+    Env.orthanc.url_decompose()
     Env.orthanc.username    = str(options.orthancuser)
     Env.orthanc.password    = str(options.orthancpassword)
     Env.inputdir            = inputdir

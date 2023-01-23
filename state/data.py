@@ -12,6 +12,7 @@ from    pathlib                 import Path
 import  pudb
 import  json
 import  os
+from    urllib.parse            import urlparse
 
 class env:
     '''
@@ -294,6 +295,14 @@ class Orthancinstance:
     def remote(self, a):
         self.d_orthanc['remote'] = a
 
+    @property
+    def url(self):
+        return self.d_orthanc['url']
+
+    @url.setter
+    def url(self, a):
+        self.d_orthanc['url'] = a
+
     def user(self, *args) -> str:
         '''
         get/set the orthanc username
@@ -324,23 +333,16 @@ class Orthancinstance:
         else:
             return ''
 
-    def url(self, *args):
+    def url_decompose(self, *args):
         '''
-        get/set the URL
+        Decompose the internal URL into constituent parts
         '''
-        str_colon : str = ""
-        if len(self.d_orthanc['port']):
-            str_colon   = ":"
-        if len(args):
-            self.d_orthanc['url']  = args[0]
-        else:
-            self.d_orthanc['url']  = '%s://%s%s%s%s' % (
-                self.d_orthanc['protocol'],
-                self.d_orthanc['IP'],
-                str_colon,
-                self.d_orthanc['port'],
-                self.d_orthanc['route']
-            )
+        o   = urlparse(self.d_orthanc['url'])
+
+        self.d_orthanc['protocol']  = o.scheme
+        self.d_orthanc['IP']        = o.hostname
+        self.d_orthanc['port']      = o.port
+        self.d_orthanc['route']     = o.path
         return self.d_orthanc['url']
 
 class Pipeline:

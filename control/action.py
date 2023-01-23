@@ -631,8 +631,8 @@ class LLDcomputeflow:
             workflowTitle           = 'PNG-to-DICOM',
             waitForNodeWithTitle    = 'pacs-push',
             pluginParameters        = {
-                'dicom-push'    : {
-                    'orthancUrl'    : self.env.orthanc.url(),
+                'pacs-push'    : {
+                    'orthancUrl'    : self.env.orthanc.url,
                     'username'      : self.env.orthanc.username,
                     'password'      : self.env.orthanc.password
                 }
