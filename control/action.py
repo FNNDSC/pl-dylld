@@ -296,7 +296,7 @@ class LLDcomputeflow:
         """
         # pudb.set_trace()
         id_pipeline     : int   = -1
-        d_nodes         : dict  = {}
+        ld_node         : list  = []
         d_pipeline      : dict  = self.cl.get_pipelines({'name': str_pipelineName})
         if 'data' in d_pipeline:
             id_pipeline : int   = d_pipeline['data'][0]['id']
@@ -304,11 +304,14 @@ class LLDcomputeflow:
                                         id_pipeline, {'limit': 1000}
                                 )
             if 'data' in d_response:
-                d_nodes : dict  = self.pluginParameters_setInNodes(
+                ld_node         = self.pluginParameters_setInNodes(
                         self.cl.compute_workflow_nodes_info(d_response['data'], True),
                         d_pluginParameters)
+                for piping in ld_node:
+                    if piping.get('compute_resource_name'):
+                        del piping['compute_resource_name']
         return {
-            'nodes'         : d_nodes,
+            'nodes'         : ld_node,
             'id'            : id_pipeline
         }
 

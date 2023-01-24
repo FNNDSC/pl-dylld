@@ -30,7 +30,7 @@ PLinputFilter   = None
 LOG             = None
 LLD             = None
 
-__version__ = '3.4.6'
+__version__ = '3.4.8'
 
 DISPLAY_TITLE = r"""
        _           _       _ _     _ 
