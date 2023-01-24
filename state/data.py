@@ -223,6 +223,8 @@ class CUBEinstance:
         self.d_CUBE['protocol']     = o.scheme
         self.d_CUBE['address']      = o.hostname
         self.d_CUBE['port']         = o.port
+        if not d_CUBE['port']:
+            d_CUBE['port']          = ''
         self.d_CUBE['route']        = o.path
         return self.d_CUBE['url']
 
@@ -361,6 +363,8 @@ class Orthancinstance:
         self.d_orthanc['protocol']  = o.scheme
         self.d_orthanc['IP']        = o.hostname
         self.d_orthanc['port']      = o.port
+        if not d_orthanc['port']:
+            d_orthanc['port']       = ''
         self.d_orthanc['route']     = o.path
         return self.d_orthanc['url']
 
