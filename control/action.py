@@ -148,9 +148,9 @@ class LLDcomputeflow:
 
         self.cl         : client.Client = None
         self.cl                         = client.Client(
-                                            self.env.CUBE.url(),
-                                            self.env.CUBE.user(),
-                                            self.env.CUBE.password()
+                                            self.env.CUBE.url,
+                                            self.env.CUBE.user,
+                                            self.env.CUBE.password
                                         )
         self.d_pipelines        : dict  = self.cl.get_pipelines()
         self.pltopo             : int   = self.cl.get_plugins({'name': 'pl-topologicalcopy'})
