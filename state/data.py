@@ -114,7 +114,7 @@ class CUBEinstance:
 
     def __init__(self, *args, **kwargs):
         self.d_CUBE = {
-            'user'      : 'chris',
+            'username'  : 'chris',
             'password'  : 'chris1234',
             'address'   : '192.168.1.200',
             'port'      : '8000',
@@ -158,6 +158,31 @@ class CUBEinstance:
     def outputdir(self, a):
         self.str_outputdir = a
 
+    @property
+    def username(self):
+        return self.d_CUBE['username']
+
+    @username.setter
+    def username(self, a):
+        self.d_CUBE['username'] = a
+
+    @property
+    def password(self):
+        return self.d_CUBE['password']
+
+    @password.setter
+    def password(self, a):
+        self.d_CUBE['password'] = a
+
+    @property
+    def url(self):
+        return self.d_CUBE['url']
+
+    @url.setter
+    def url(self, a):
+        self.d_CUBE['url'] = a
+        self.url_decompose()
+
     def onCUBE(self) -> dict:
         '''
         Return a dictionary that is a subset of self.d_CUBE
@@ -167,7 +192,7 @@ class CUBEinstance:
             'protocol': self('protocol'),
             'port':     self('port'),
             'address':  self('address'),
-            'user':     self('user'),
+            'user':     self('username'),
             'password': self('password')
         }
 
@@ -189,23 +214,16 @@ class CUBEinstance:
             'parentPluginInstanceID':   self.parentPluginInstanceID
         }
 
-    def url(self, *args):
+    def url_decompose(self, *args):
         '''
-        get/set the URL
+        Decompose the internal URL into constituent parts
         '''
-        str_colon : str = ""
-        if len(self.d_CUBE['port']):
-            str_colon   = ":"
-        if len(args):
-            self.d_CUBE['url']  = args[0]
-        else:
-            self.d_CUBE['url']  = '%s://%s%s%s%s' % (
-                self.d_CUBE['protocol'],
-                self.d_CUBE['address'],
-                str_colon,
-                self.d_CUBE['port'],
-                self.d_CUBE['route']
-            )
+
+        o   = urlparse(self.d_CUBE['url'])
+        self.d_CUBE['protocol']     = o.scheme
+        self.d_CUBE['address']      = o.hostname
+        self.d_CUBE['port']         = o.port
+        self.d_CUBE['route']        = o.path
         return self.d_CUBE['url']
 
     def user(self, *args) -> str:
@@ -302,6 +320,7 @@ class Orthancinstance:
     @url.setter
     def url(self, a):
         self.d_orthanc['url'] = a
+        self.url_decompose()
 
     def user(self, *args) -> str:
         '''
