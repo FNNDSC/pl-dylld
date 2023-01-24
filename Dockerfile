@@ -16,7 +16,7 @@ COPY . .
 ARG extras_require=none
 RUN pip install ".[${extras_require}]"
 
-RUN apt update && apt -y install telnet procps
+RUN apt update && apt -y install telnet procps vim
 
 EXPOSE 7900
 
