@@ -30,7 +30,7 @@ PLinputFilter   = None
 LOG             = None
 LLD             = None
 
-__version__ = '3.2.8'
+__version__ = '3.4.2'
 
 DISPLAY_TITLE = r"""
        _           _       _ _     _ 
@@ -68,14 +68,19 @@ parser.add_argument(
             help    = 'plugin instance ID from which to start analysis'
 )
 parser.add_argument(
-            '--CUBEIP',
-            default = '192.168.1.200',
-            help    = 'CUBE IP address'
+            '--CUBEurl',
+            default = 'http://localhost:8000/api/v1/',
+            help    = 'CUBE URL'
 )
 parser.add_argument(
-            '--CUBEport',
-            default = '8000',
-            help    = 'CUBE port'
+            '--CUBEuser',
+            default = 'chris',
+            help    = 'CUBE/ChRIS username'
+)
+parser.add_argument(
+            '--CUBEpassword',
+            default = 'chris1234',
+            help    = 'CUBE/ChRIS password'
 )
 parser.add_argument(
             '--orthancURL',
@@ -167,8 +172,10 @@ def Env_setup(options: Namespace, inputdir: Path, outputdir: Path):
     global Env
     Env.CUBE.inputdir       = str(inputdir)
     Env.CUBE.outputdir      = str(outputdir)
+    Env.CUBE.url            = str(options.CUBEurl)
+    Env.CUBE.user           = str(options.CUBEuser)
+    Env.CUBE.password       = str(options.CUBEpassword)
     Env.orthanc.url         = str(options.orthancURL)
-    Env.orthanc.url_decompose()
     Env.orthanc.username    = str(options.orthancuser)
     Env.orthanc.password    = str(options.orthancpassword)
     Env.inputdir            = inputdir
