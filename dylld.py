@@ -44,7 +44,7 @@ pluginInputDir:Path     = None
 pluginOutputDir:Path    = None
 ld_forestResult:list    = []
 
-__version__ = '4.0.2'
+__version__ = '4.2.0'
 
 DISPLAY_TITLE = r"""
        _           _       _ _     _
@@ -237,6 +237,23 @@ def ground_prep(options: Namespace, Env : data.env) -> action.PluginRun:
             Env.CUBE.parentPluginInstanceID_discover()['parentPluginInstanceID']
     return PLinputFilter
 
+def replantSeed_catchError(PLseed:action.PluginRun, input: Path) -> dict:
+    """
+    Re-run a failed filter (pl-shexec) with explicit error catching
+
+    Args:
+        PLseed (action.Pluginrun): the plugin run object to re-execute
+        input (Path): the input on which the seed failed
+
+    Returns:
+        dict: the detailed error log from the failed run
+    """
+    global  LOG
+    LOG("Some error was returned when planting the seed!")
+    LOG('Replanting seed with error catching on...')
+    d_seedreplant:dict  = PLseed(str(input), append = "--jsonReturn")
+    return d_seedreplant
+
 def tree_grow(options: Namespace, input: Path, output: Path = None) -> dict:
     """
     Based on some conditional applied to the <input> file space, direct the
@@ -290,14 +307,8 @@ def tree_grow(options: Namespace, input: Path, output: Path = None) -> dict:
         d_seedGet                   = PLinputFilter(str(input))
         if d_seedGet['status']:
             d_treeGrow              = LLD(d_seedGet['branchInstanceID'])
-            LOG('Flow result:')
-            LOG('%s' % json.dumps(d_treeGrow, indent = 4))
-            LOG('-30-')
         else:
-            LOG("Some error was returned when planting the seed!")
-            LOG('stdout: %s' % d_seedGet['run']['stdout'])
-            LOG('stderr: %s' % d_seedGet['run']['stderr'])
-            LOG('return: %s' % d_seedGet['run']['returncode'])
+            d_seedGet['failed']     = replantSeed_catchError(PLinputFilter, input)
     fl.write('End   time: {}\n'.format(timenow()))
     fl.close()
     d_ret['seed']       = d_seedGet
@@ -305,7 +316,7 @@ def tree_grow(options: Namespace, input: Path, output: Path = None) -> dict:
     ld_forestResult.append(d_ret)
     return d_ret
 
-def treeGrowth_savelog(outputdir : Path):
+def treeGrowth_savelog(outputdir : Path) -> None:
     """
     Write the global log file on the tree growth to the passed
     <outputdir>

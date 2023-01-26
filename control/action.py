@@ -94,7 +94,7 @@ class PluginRun:
             'cmd' : str_cmd
         }
 
-    def __call__(self, str_input : str) ->dict:
+    def __call__(self, str_input : str, **kwargs) ->dict:
         '''
         Copy the <str_input> to the output using pl-pfdorun. If the in-node
         self.options.inNode is true, perform a bulk copy of all files in the
@@ -108,6 +108,11 @@ class PluginRun:
         branchID            : int   = -1
         b_status            : bool  = False
 
+        str_append          : str   = ""
+        for k,v in kwargs.items():
+            if k == 'append'    : str_append = v
+
+        str_PLCmd   += " " + str_append
         if self.options:
             str_scriptDir   : str   = '%s/%s' % (self.options.outputdir, str_inputTarget)
             os.mkdir(str_scriptDir)
