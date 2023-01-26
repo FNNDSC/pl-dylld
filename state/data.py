@@ -13,6 +13,8 @@ import  pudb
 import  json
 import  os
 from    urllib.parse            import urlparse
+import  logging
+logging.basicConfig(level=logging.CRITICAL)
 
 class env:
     '''
