@@ -44,7 +44,7 @@ pluginInputDir:Path     = None
 pluginOutputDir:Path    = None
 ld_forestResult:list    = []
 
-__version__ = '4.0.0'
+__version__ = '4.0.2'
 
 DISPLAY_TITLE = r"""
        _           _       _ _     _
@@ -338,7 +338,7 @@ def main(options: Namespace, inputdir: Path, outputdir: Path):
     pluginInputDir  = inputdir
     pluginOutputDir = outputdir
 
-    set_trace(term_size=(253, 62), host = '0.0.0.0', port = 7900)
+    # set_trace(term_size=(253, 62), host = '0.0.0.0', port = 7900)
 
     preamble_show(options)
 
@@ -355,7 +355,7 @@ def main(options: Namespace, inputdir: Path, outputdir: Path):
                             outputdir
                         )
     if int(options.thread):
-        with ProcessPoolExecutor(max_workers=len(os.sched_getaffinity(0))) as pool:
+        with ThreadPoolExecutor(max_workers=len(os.sched_getaffinity(0))) as pool:
             results = pool.map(lambda t: tree_grow(options, *t), mapper)
     else:
         for input, output in mapper:
