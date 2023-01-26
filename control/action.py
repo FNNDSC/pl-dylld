@@ -475,7 +475,7 @@ class LLDcomputeflow:
                         )
         return pluginID
 
-    def nodeIDs_verify(self, l_nodeID : list) -> list:
+    def nodeIDs_verify(self, l_nodeID : list) -> list[int]:
         """
 
         Verify that a list of <l_nodeID> contains only int
@@ -490,7 +490,7 @@ class LLDcomputeflow:
         Returns:
             list: list containing only node IDs
         """
-        l_nodeID = [self.pluginID_findInWorkflowDesc(x) for x in l_nodeID]
+        l_nodeID: list[int] = [self.pluginID_findInWorkflowDesc(x) for x in l_nodeID]
         return l_nodeID
 
     def flow_executeAndBlockUntilNodeComplete(
