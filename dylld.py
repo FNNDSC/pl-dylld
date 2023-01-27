@@ -44,7 +44,7 @@ pluginInputDir:Path     = None
 pluginOutputDir:Path    = None
 ld_forestResult:list    = []
 
-__version__ = '4.2.6'
+__version__ = '4.4.0'
 
 DISPLAY_TITLE = r"""
        _           _       _ _     _
@@ -172,19 +172,20 @@ def Env_setup(  options         : Namespace,
         debugPortOffset (int, optional): offset added to debug port -- useful for multithreading. Defaults to 0.
 
     Returns:
-        data.env: _description_
+        data.env: an instantiated environment object. Note in multithreaded
+                  runs, each thread gets its own object.
     """
-    Env: data.env           = data.env()
-    Env.CUBE.inputdir       = str(inputdir)
-    Env.CUBE.outputdir      = str(outputdir)
-    Env.CUBE.url            = str(options.CUBEurl)
-    Env.CUBE.user           = str(options.CUBEuser)
-    Env.CUBE.password       = str(options.CUBEpassword)
-    Env.orthanc.url         = str(options.orthancURL)
-    Env.orthanc.username    = str(options.orthancuser)
-    Env.orthanc.password    = str(options.orthancpassword)
-    Env.inputdir            = inputdir
-    Env.outputdir           = outputdir
+    Env: data.env               = data.env()
+    Env.CUBE.set(inputdir       = str(inputdir))
+    Env.CUBE.set(outputdir      = str(outputdir))
+    Env.CUBE.set(url            = str(options.CUBEurl))
+    Env.CUBE.set(username       = str(options.CUBEuser))
+    Env.CUBE.set(password       = str(options.CUBEpassword))
+    Env.orthanc.set(url         = str(options.orthancURL))
+    Env.orthanc.set(username    = str(options.orthancuser))
+    Env.orthanc.set(password    = str(options.orthancpassword))
+    Env.set(inputdir            = inputdir)
+    Env.set(outputdir           = outputdir)
     Env.debug_setup(    debug       = options.debug,
                         termsize    = options.debugTermSize,
                         port        = int(options.debugPort) + debugPortOffset,
@@ -268,6 +269,8 @@ def tree_grow(options: Namespace, input: Path, output: Path = None) -> dict:
         dict: resulant object dictionary of this (threaded) growth
     """
     global pluginInputDir, pluginOutputDir, LOG, ld_forestResult
+
+    # set_trace(term_size=(253, 62), host = '0.0.0.0', port = 7900)
 
     Env:data.env = Env_setup(
                         options,
