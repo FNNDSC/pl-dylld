@@ -115,7 +115,7 @@ class PluginRun:
         str_PLCmd   += " " + str_append
         if self.options:
             str_scriptDir   : str   = '%s/%s' % (self.options.outputdir, str_inputTarget)
-            os.mkdirs(str_scriptDir, exist_ok = True)
+            os.makedirs(str_scriptDir, exist_ok = True)
             str_PLCmdfile   = '%s/%s/copy.sh' % (self.options.outputdir, str_inputTarget)
 
         with open(str_PLCmdfile, 'w') as f:
