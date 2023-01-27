@@ -246,6 +246,7 @@ class LLDcomputeflow:
         return {
             'finished'  : b_finished,
             'status'    : str_pluginStatus,
+            'workflow'  : d_workflowDetail,
             'plinst'    : d_plinfo,
             'polls'     : pollCount,
             'plid'      : waitOnPluginID
@@ -525,6 +526,7 @@ class LLDcomputeflow:
         str_blockNodeTitle  : str   = "no node title"
         b_canFlow           : bool  = False
         d_pluginParameters  : dict  = {}
+        d_ret               : dict  = {}
 
         for k, v in kwargs.items():
             if k == 'workflowTitle'         :   str_workflowTitle   = v
@@ -535,7 +537,7 @@ class LLDcomputeflow:
         if self.parentNode_isFinished(*args):
             if attachToNodeID == -1:
                 attachToNodeID = self.parentNode_IDget(*args)
-            return  self.waitForNodeInWorkflow(
+            d_ret = self.waitForNodeInWorkflow(
                         self.workflow_schedule(
                             attachToNodeID,
                             str_workflowTitle,
@@ -543,6 +545,11 @@ class LLDcomputeflow:
                         ),
                         str_blockNodeTitle
                     )
+            if len(args):
+                d_ret['prior']  = args[0]
+            else:
+                d_ret['prior']  = None
+        return d_ret
 
     def flows_connect(
         self,
@@ -580,6 +587,10 @@ class LLDcomputeflow:
                 l_nodeID,
                 str_topoJoinArgs
             )
+            if len(args):
+                d_ret['prior']  = args[0]
+            else:
+                d_ret['prior']  = None
         return d_ret
 
     def computeFlow_build(self) -> dict:
