@@ -26,8 +26,8 @@ class env:
         '''
         Constructor
         '''
-        self._inputdir  : Path              = None
-        self._outputdir : Path              = None
+        self.inputdir   : Path              = None
+        self.outputdir  : Path              = None
         self.CUBE       : CUBEinstance      = CUBEinstance()
         self.orthanc    : Orthancinstance   = Orthancinstance()
         self.debug      : dict              = {
@@ -93,21 +93,28 @@ class env:
         if self.debug['do']:
             pudb.set_trace()
 
-    @property
-    def inputdir(self):
-        return self._inputdir
+    def __call__(self, str_key) -> str | None:
+        '''
+        get a value for a str_key
+        '''
+        if str_key in ['inputdir', 'outputdir']:
+            return getattr(self, str_key)
+        else:
+            return None
 
-    @inputdir.setter
-    def inputdir(self, a):
-        self._inputdir = a
+    def set(self, **kwargs) -> bool:
+        """
+        A custom setter -- the normal python getter/setter approach suffers
+        IMHO from implicitly adding members directly to the object.
 
-    @property
-    def outputdir(self):
-        return self._outputdir
-
-    @outputdir.setter
-    def outputdir(self, a):
-        self._outputdir = a
+        Returns:
+            bool: True or False on setting
+        """
+        b_status:bool       = False
+        for k,v in kwargs.items():
+            if k == 'inputdir'  : self.inputdir     = v ; b_status = True
+            if k == 'outputdir' : self.outputdir    = v ; b_status = True
+        return b_status
 
 class CUBEinstance:
     '''
@@ -128,62 +135,50 @@ class CUBEinstance:
         self.str_inputdir               : str   = None
         self.str_outputdir              : str   = None
 
-    @property
-    def IP(self):
-        return self.d_CUBE['address']
+    def setCUBE(self, str_key, str_val):
+        '''
+        set str_key to str_val
+        '''
+        if str_key in self.d_CUBE.keys():
+            self.d_CUBE[str_key]    = str_val
 
-    @IP.setter
-    def IP(self, a):
-        self.d_CUBE['address'] = a
+    def __call__(self, str_key) -> str | None:
+        '''
+        get a value for a str_key
+        '''
+        if str_key in self.d_CUBE.keys():
+            return self.d_CUBE[str_key]
+        else:
+            if str_key in ['inputdir', 'outputdir']:
+                return getattr(self, str_key)
+            else:
+                return None
 
-    @property
-    def port(self):
-        return self.d_CUBE['port']
+    def set(self, **kwargs) -> bool:
+        """
+        A custom setter -- the normal python getter/setter approach suffers
+        IMHO from implicitly adding members directly to the object.
 
-    @port.setter
-    def port(self, a):
-        self.d_CUBE['port'] = a
-
-    @property
-    def inputdir(self):
-        return self.str_inputdir
-
-    @inputdir.setter
-    def inputdir(self, a):
-        self.str_inputdir = a
-
-    @property
-    def outputdir(self):
-        return self.str_outputdir
-
-    @outputdir.setter
-    def outputdir(self, a):
-        self.str_outputdir = a
-
-    @property
-    def username(self):
-        return self.d_CUBE['username']
-
-    @username.setter
-    def username(self, a):
-        self.d_CUBE['username'] = a
-
-    @property
-    def password(self):
-        return self.d_CUBE['password']
-
-    @password.setter
-    def password(self, a):
-        self.d_CUBE['password'] = a
-
-    @property
-    def url(self):
-        return self.d_CUBE['url']
-
-    @url.setter
-    def url(self, a):
-        self.d_CUBE['url'] = a
-        self.url_decompose()
+        Returns:
+            bool: True or False on setting
+        """
+        b_status:bool       = False
+        for k,v in kwargs.items():
+            if k == 'inputdir'  : self.str_inputdir     = v ; b_status = True
+            if k == 'outputdir' : self.str_outputdir    = v ; b_status = True
+            if k == 'parentPluginInstanceID' :
+                            self.parentPluginInstanceID = v ; b_status  = True
+            if k == 'username'  : self.setCUBE(k, v)        ; b_status  = True
+            if k == 'password'  : self.setCUBE(k, v)        ; b_status  = True
+            if k == 'addreses'  : self.setCUBE(k, v)        ; b_status  = True
+            if k == 'port'      : self.setCUBE(k, v)        ; b_status  = True
+            if k == 'route'     : self.setCUBE(k, v)        ; b_status  = True
+            if k == 'protocol'  : self.setCUBE(k, v)        ; b_status  = True
+            if k == 'url'       :
+                self.setCUBE(k, v)
+                self.url_decompose()
+                b_status  = True
+        return b_status
 
     def onCUBE(self) -> dict:
         '''
@@ -230,43 +225,13 @@ class CUBEinstance:
         self.d_CUBE['route']        = o.path
         return self.d_CUBE['url']
 
-    def user(self, *args) -> str:
-        '''
-        get/set the CUBE user
-        '''
-        if len(args): self.d_CUBE['user']  = args[0]
-        return self.d_CUBE['user']
-
-    def password(self, *args) -> str:
-        '''
-        get/set the CUBE user
-        '''
-        if len(args): self.d_CUBE['password']  = args[0]
-        return self.d_CUBE['password']
-
-    def set(self, str_key, str_val):
-        '''
-        set str_key to str_val
-        '''
-        if str_key in self.d_CUBE.keys():
-            self.d_CUBE[str_key]    = str_val
-
-    def __call__(self, str_key):
-        '''
-        get a value for a str_key
-        '''
-        if str_key in self.d_CUBE.keys():
-            return self.d_CUBE[str_key]
-        else:
-            return ''
-
 class Orthancinstance:
     '''
     A class that contains data pertinent to a specific Orthanc instance
     '''
 
-    def __init__(self, *args, **kwargs):
-        self.d_orthanc = {
+    def __init__(self, *args, **kwargs) -> None:
+        self.d_orthanc: dict[str, str] = {
             'username'  : 'orthanc',
             'password'  : 'orthanc',
             'IP'        : '192.168.1.200',
@@ -277,84 +242,47 @@ class Orthancinstance:
             'url'       : ''
         }
 
-    @property
-    def IP(self):
-        return self.d_orthanc['IP']
-
-    @IP.setter
-    def IP(self, a):
-        self.d_orthanc['IP'] = a
-
-    @property
-    def port(self):
-        return self.d_orthanc['port']
-
-    @port.setter
-    def port(self, a):
-        self.d_orthanc['port'] = a
-
-    @property
-    def username(self):
-        return self.d_orthanc['username']
-
-    @username.setter
-    def username(self, a):
-        self.d_orthanc['username'] = a
-
-    @property
-    def password(self):
-        return self.d_orthanc['password']
-
-    @password.setter
-    def password(self, a):
-        self.d_orthanc['password'] = a
-
-    @property
-    def remote(self):
-        return self.d_orthanc['remote']
-
-    @remote.setter
-    def remote(self, a):
-        self.d_orthanc['remote'] = a
-
-    @property
-    def url(self):
-        return self.d_orthanc['url']
-
-    @url.setter
-    def url(self, a):
-        self.d_orthanc['url'] = a
-        self.url_decompose()
-
-    def user(self, *args) -> str:
-        '''
-        get/set the orthanc username
-        '''
-        if len(args): self.d_orthanc['username']  = args[0]
-        return self.d_orthanc['username']
-
-    def password(self, *args) -> str:
-        '''
-        get/set the orthanc password
-        '''
-        if len(args): self.d_orthanc['password']  = args[0]
-        return self.d_orthanc['password']
-
-    def set(self, str_key, str_val):
+    def setOrthanc(self, str_key, str_val) -> bool:
         '''
         set str_key to str_val
         '''
+        b_status:bool   = False
         if str_key in self.d_orthanc.keys():
+            b_status    = True
             self.d_orthanc[str_key]    = str_val
+        return b_status
 
-    def __call__(self, str_key):
+    def __call__(self, str_key) -> str | None:
         '''
         get a value for a str_key
         '''
         if str_key in self.d_orthanc.keys():
             return self.d_orthanc[str_key]
         else:
-            return ''
+            return None
+
+    def set(self, **kwargs) -> bool:
+        """
+        A custom setter -- the normal python getter/setter approach suffers
+        IMHO from implicitly adding members directly to the object.
+
+        Returns:
+            bool: True or False on setting
+        """
+        b_status:bool       = False
+        for k,v in kwargs.items():
+            if k == 'username'  : self.setOrthanc(k, v)        ; b_status  = True
+            if k == 'password'  : self.setOrthanc(k, v)        ; b_status  = True
+            if k == 'IP'        : self.setOrthanc(k, v)        ; b_status  = True
+            if k == 'port'      : self.setOrthanc(k, v)        ; b_status  = True
+            if k == 'remote'    : self.setOrthanc(k, v)        ; b_status  = True
+            if k == 'protocol'  : self.setOrthanc(k, v)        ; b_status  = True
+            if k == 'route'     : self.setOrthanc(k, v)        ; b_status  = True
+            if k == 'url'       :
+                self.setOrthanc(k, v)
+                self.url_decompose()
+                b_status  = True
+        return b_status
 
     def url_decompose(self, *args):
         '''
