@@ -27,7 +27,7 @@ setup(
     author_email        = 'rudolph.pienaar@childrens.harvard.edu',
     url                 = 'https://github.com/rudolphpienaar/pl-dylld',
     py_modules          = ['dylld'],
-    install_requires    = ['chris_plugin', 'pflogf', 'pudb'],
+    install_requires    = ['chris_plugin', 'pflogf', 'pudb', 'plog', 'pftag'],
     packages            =  ['control', 'logic', 'state'],
     license             = 'MIT',
     entry_points        = {
