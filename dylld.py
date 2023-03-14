@@ -16,7 +16,7 @@ from    loguru                  import logger
 from    concurrent.futures      import ThreadPoolExecutor, ProcessPoolExecutor
 from    threading               import current_thread, get_native_id
 
-from    typing                  import Callable
+from    typing                  import Callable, Any
 
 from    datetime                import datetime, timezone
 import  json
@@ -25,7 +25,8 @@ from    state                   import data
 from    logic                   import behavior
 from    control                 import action
 from    control.filter          import PathFilter
-
+from    pftag                   import pftag
+from    pflog                   import pflog
 
 LOG             = logger.debug
 
@@ -44,7 +45,7 @@ pluginInputDir:Path     = None
 pluginOutputDir:Path    = None
 ld_forestResult:list    = []
 
-__version__ = '4.4.2'
+__version__ = '4.4.6'
 
 DISPLAY_TITLE = r"""
        _           _       _ _     _
@@ -87,6 +88,11 @@ parser.add_argument(
             help    = 'CUBE URL'
 )
 parser.add_argument(
+            '--pftelDB',
+            default = '',
+            help    = 'optional pftel server DB path'
+)
+parser.add_argument(
             '--CUBEuser',
             default = 'chris',
             help    = 'CUBE/ChRIS username'
@@ -127,6 +133,11 @@ parser.add_argument(
             dest    = 'thread',
             action  = 'store_true',
             default = False
+)
+parser.add_argument(
+            "--pftelDB",
+            help    = "an optional pftel telemetry logger, of form '<pftelURL>/api/v1/<object>/<collection>/<event>'",
+            default = ''
 )
 parser.add_argument(
             "--inNode",
@@ -193,12 +204,24 @@ def Env_setup(  options         : Namespace,
     )
     return Env
 
-def preamble_show(options: Namespace) -> None:
+def preamble(options: Namespace) -> str:
     """
-    Just show some preamble "noise" in the output terminal
+    Just show some preamble "noise" in the output terminal and also process
+    the --pftelDB if provided.
+
+    Args:
+        options (Namespace): CLI options namespace
+
+    Returns:
+        str: the parsed <pftelDB> string
     """
 
     print(DISPLAY_TITLE)
+    pftelDB:str     = ""
+
+    if options.pftelDB:
+        tagger:pftag.Pftag  = pftag.Pftag({})
+        pftelDB             = tagger(options.pftelDB)['result']
 
     LOG("plugin arguments...")
     for k,v in options.__dict__.items():
@@ -211,6 +234,7 @@ def preamble_show(options: Namespace) -> None:
     LOG("")
 
     LOG("Starting growth cycle...")
+    return pftelDB
 
 def ground_prep(options: Namespace, Env : data.env) -> action.PluginRun:
     """
@@ -333,6 +357,30 @@ def treeGrowth_savelog(outputdir : Path) -> None:
         f.write(json.dumps(ld_forestResult, indent=4))
     f.close()
 
+def epilogue(options:Namespace, dt_start:datetime = None) -> None:
+    """
+    Some epilogue cleanup -- basically determine a delta time
+    between passed epoch and current, and if indicated in CLI
+    pflog this.
+
+    Args:
+        options (Namespace): option space
+        dt_start (datetime): optional start date
+    """
+    tagger:pftag.Pftag  = pftag.Pftag({})
+    dt_end:datetime     = pftag.timestamp_dt(tagger(r'%timestamp')['result'])
+    ft:float            = 0.0
+    if dt_start:
+        ft              = (dt_end - dt_start).total_seconds()
+    if options.pftelDB:
+        options.pftelDB = '/'.join(options.pftelDB.split('/')[:-1] + ['dylld'])
+        d_log:dict      = pflog.pfprint(
+                            options.pftelDB,
+                            f"Shutting down after {ft} seconds.",
+                            appName     = 'pl-dylld',
+                            execTime    = ft
+                        )
+
 # documentation: https://fnndsc.github.io/chris_plugin/chris_plugin.html#chris_plugin
 @chris_plugin(
     parser              = parser,
@@ -349,12 +397,14 @@ def main(options: Namespace, inputdir: Path, outputdir: Path):
     :param outputdir: directory where to write output files
     """
     global pluginInputDir, pluginOutputDir
-    pluginInputDir  = inputdir
-    pluginOutputDir = outputdir
+    tagger:pftag.Pftag  = pftag.Pftag({})
+    dt_start:datetime   = pftag.timestamp_dt(tagger(r'%timestamp')['result'])
+    pluginInputDir      = inputdir
+    pluginOutputDir     = outputdir
 
     # set_trace(term_size=(253, 62), host = '0.0.0.0', port = 7900)
 
-    preamble_show(options)
+    options.pftelDB     = preamble(options)
 
     output: None = None
     if not options.inNode:
@@ -377,6 +427,7 @@ def main(options: Namespace, inputdir: Path, outputdir: Path):
 
     LOG("Ending growth cycle...")
     treeGrowth_savelog(outputdir)
+    epilogue(options, dt_start)
 
 if __name__ == '__main__':
     main()

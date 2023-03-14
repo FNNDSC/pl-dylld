@@ -63,9 +63,10 @@ class PluginRun:
             --exec=cp %%inputWorkingDir/%%inputWorkingFile %%outputWorkingDir/%%inputWorkingFile;
             --noJobLogging;
             --verbose=5;
+            --pftelDB=%s;
             --title=%s;
             --previous_id=%s
-        """ % (str_filter, str_input, self.env.CUBE.parentPluginInstanceID)
+        """ % (str_filter, self.options.pftelDB, str_input, self.env.CUBE.parentPluginInstanceID)
 
         str_args = re.sub(r';\n.*--', ';--', str_args)
         str_args = str_args.strip()
@@ -620,12 +621,14 @@ class LLDcomputeflow:
                                     pluginParameters        = {
                                         'dcm-to-mha'  : {
                                                     'imageName'         : 'composite.png',
-                                                    'rotate'            : '90'
+                                                    'rotate'            : '90',
+                                                    'pftelDB'           : self.options.pftelDB
                                         },
                                         'generate-landmark-heatmaps' : {
                                                     'heatmapThreshold' : '0.5',
                                                     'imageType'        : 'jpg',
-                                                    'compositeWeight'  : '0.3,0.7'
+                                                    'compositeWeight'  : '0.3,0.7',
+                                                    'pftelDB'           : self.options.pftelDB
                                         }
                                     }
                                 ),
@@ -634,14 +637,24 @@ class LLDcomputeflow:
                                 topoJoinArgs            = '\.dcm$,\.csv$'
                             ),
                             workflowTitle           = 'Leg Length Discrepency prediction formatter',
-                            waitForNodeWithTitle    = 'landmarks-to-json'
+                            waitForNodeWithTitle    = 'landmarks-to-json',
+                            pluginParameters        = {
+                                'landmarks-to-json' : {
+                                    'pftelDB'       : self.options.pftelDB
+                                }
+                            }
                         ),
                         connectionNodeTitle     = 'mergeJPGSwithInference',
                         distalNodeIDs           = [('Leg Length Discrepency inference', 'heatmaps')],
                         topoJoinArgs            = '\.jpg$,\.json$'
                     ),
                     workflowTitle           = 'Leg Length Discrepency measurement',
-                    waitForNodeWithTitle    = 'measure-leg-segments'
+                    waitForNodeWithTitle    = 'measure-leg-segments',
+                    pluginParameters        = {
+                        'measure-leg-segments'  : {
+                            'pftelDB'           : self.options.pftelDB
+                        }
+                    }
                 ),
                 connectionNodeTitle     = 'mergeMarkedJPGSwithDICOMS',
                 distalNodeIDs           = [('Topological', 'mergeDICOMSwithInference')],
@@ -650,7 +663,11 @@ class LLDcomputeflow:
             workflowTitle           = 'PNG-to-DICOM',
             waitForNodeWithTitle    = 'pacs-push',
             pluginParameters        = {
-                'pacs-push'    : {
+                'image-to-DICOM'    : {
+                    'pftelDB'       : self.options.pftelDB
+                },
+                'pacs-push'         : {
+                    'pftelDB'       : self.options.pftelDB,
                     'orthancUrl'    : self.env.orthanc('url'),
                     'username'      : self.env.orthanc('username'),
                     'password'      : self.env.orthanc('password')
