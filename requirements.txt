@@ -4,6 +4,6 @@ pflogf
 pfmisc
 loguru
 python-chrisclient
-pftag
-pflog
+pftag==1.2.18
+pflog==1.2.2
 pftel-client

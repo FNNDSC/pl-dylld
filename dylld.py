@@ -45,7 +45,7 @@ pluginInputDir:Path     = None
 pluginOutputDir:Path    = None
 ld_forestResult:list    = []
 
-__version__ = '4.4.8'
+__version__ = '4.4.10'
 
 DISPLAY_TITLE = r"""
        _           _       _ _     _
@@ -391,13 +391,13 @@ def main(options: Namespace, inputdir: Path, outputdir: Path):
     :param inputdir: directory containing input files (read-only)
     :param outputdir: directory where to write output files
     """
+    # set_trace(term_size=(253, 62), host = '0.0.0.0', port = 7900)
     global pluginInputDir, pluginOutputDir
     tagger:pftag.Pftag  = pftag.Pftag({})
     dt_start:datetime   = pftag.timestamp_dt(tagger(r'%timestamp')['result'])
     pluginInputDir      = inputdir
     pluginOutputDir     = outputdir
 
-    # set_trace(term_size=(253, 62), host = '0.0.0.0', port = 7900)
 
     options.pftelDB     = preamble(options)
 
