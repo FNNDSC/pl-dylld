@@ -4,3 +4,6 @@ pflogf
 pfmisc
 loguru
 python-chrisclient
+pftag
+pflog
+pftel-client
