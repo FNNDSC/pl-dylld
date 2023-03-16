@@ -617,7 +617,7 @@ class LLDcomputeflow:
                             self.flows_connect(
                                 self.flow_executeAndBlockUntilNodeComplete(
                                     attachToNodeID          = self.newTreeID,
-                                    workflowTitle           = 'Leg Length Discrepency inference on DICOM inputs v20230315',
+                                    workflowTitle           = 'Leg Length Discrepency inference on DICOM inputs v20230316',
                                     waitForNodeWithTitle    = 'heatmaps',
                                     pluginParameters        = {
                                         'dcm-to-mha'  : {
@@ -637,7 +637,7 @@ class LLDcomputeflow:
                                 distalNodeIDs           = [self.newTreeID],
                                 topoJoinArgs            = '\.dcm$,\.csv$'
                             ),
-                            workflowTitle           = 'Leg Length Discrepency prediction formatter v20230315',
+                            workflowTitle           = 'Leg Length Discrepency prediction formatter v20230316',
                             waitForNodeWithTitle    = 'landmarks-to-json',
                             pluginParameters        = {
                                 'landmarks-to-json' : {
@@ -649,7 +649,7 @@ class LLDcomputeflow:
                         distalNodeIDs           = [('Leg Length Discrepency inference', 'heatmaps')],
                         topoJoinArgs            = '\.jpg$,\.json$'
                     ),
-                    workflowTitle           = 'Leg Length Discrepency measurements on image v20230315',
+                    workflowTitle           = 'Leg Length Discrepency measurements on image v20230316',
                     waitForNodeWithTitle    = 'measure-leg-segments',
                     pluginParameters        = {
                         'measure-leg-segments'  : {
@@ -661,7 +661,7 @@ class LLDcomputeflow:
                 distalNodeIDs           = [('Topological', 'mergeDICOMSwithInference')],
                 topoJoinArgs            = '\.dcm$,\.png$'
             ),
-            workflowTitle           = 'PNG-to-DICOM and push to PACS v20230315-1',
+            workflowTitle           = 'PNG-to-DICOM and push to PACS v20230316',
             waitForNodeWithTitle    = 'pacs-push',
             pluginParameters        = {
                 'image-to-DICOM'    : {
