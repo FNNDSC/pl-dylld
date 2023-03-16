@@ -14,6 +14,7 @@ str_about = '''
 from    .                       import  jobber
 from    state                   import  data
 import  os
+os.environ['XDG_CONFIG_HOME'] = '/tmp'
 import  re
 import  pudb
 import  json

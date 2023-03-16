@@ -9,6 +9,7 @@ from    pathlib                 import Path
 
 from    io                      import TextIOWrapper
 import  os, sys
+os.environ['XDG_CONFIG_HOME'] = '/tmp'
 import  pudb
 from    pudb.remote             import set_trace
 
@@ -45,7 +46,7 @@ pluginInputDir:Path     = None
 pluginOutputDir:Path    = None
 ld_forestResult:list    = []
 
-__version__ = '4.4.12'
+__version__ = '4.4.14'
 
 DISPLAY_TITLE = r"""
        _           _       _ _     _

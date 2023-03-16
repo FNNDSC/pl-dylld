@@ -8,6 +8,7 @@ str_about = '''
 
 import  subprocess
 import  os
+os.environ['XDG_CONFIG_HOME'] = '/tmp'
 import  pudb
 import  json
 

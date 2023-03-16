@@ -5,13 +5,13 @@ str_about = '''
     Core data includes information on the ChRIS/CUBE instances as well as
     information relevant to the pipeline to be scheduled.
 '''
-
+import os
+os.environ['XDG_CONFIG_HOME'] = '/tmp'
 from    pudb.remote             import set_trace
 from    curses                  import meta
 from    pathlib                 import Path
 import  pudb
 import  json
-import  os
 from    urllib.parse            import urlparse
 import  logging
 logging.basicConfig(level=logging.CRITICAL)
