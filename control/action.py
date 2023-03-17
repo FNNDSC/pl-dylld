@@ -212,7 +212,8 @@ class LLDcomputeflow:
 
     def waitForNodeInWorkflow(self,
             d_workflowDetail    : dict,
-            node_title          : str
+            node_title          : str,
+            **kwargs
         ) -> dict:
         """
         Wait for a node in a workflow to transition to a finishedState
@@ -221,6 +222,11 @@ class LLDcomputeflow:
             d_workflowDetail (dict): the workflow in which the node
                                      exists
             node_title (str):        the title of the node to find
+
+        kwargs:
+                waitPoll        = the polling interval in seconds
+                totalPolls      = total number of polling before abandoning;
+                                  if this is 0, then poll forever.
 
         Future: expand to wait on list of node_titles
 
@@ -236,13 +242,18 @@ class LLDcomputeflow:
                                 )
         str_pluginStatus: str   = 'unknown'
         d_plinfo        : dict  = {}
+
+        for k,v in kwargs.items():
+            if k == 'waitPoll':     waitPoll    = v
+            if k == 'totalPolls':   totalPolls  = v
+
         if waitOnPluginID >= 0:
             while 'finished' not in str_pluginStatus.lower() and \
-                pollCount < totalPolls :
+                pollCount <= totalPolls :
                 d_plinfo         = self.cl.get_plugin_instance_by_id(waitOnPluginID)
                 str_pluginStatus = d_plinfo['status']
                 time.sleep(waitPoll)
-                pollCount += 1
+                if totalPolls:  pollCount += 1
             if 'finished' in d_plinfo['status']:
                 b_finished  = d_plinfo['status'] == 'finishedSuccessfully'
         return {
@@ -545,7 +556,8 @@ class LLDcomputeflow:
                             str_workflowTitle,
                             d_pluginParameters
                         ),
-                        str_blockNodeTitle
+                        str_blockNodeTitle,
+                        **kwargs
                     )
             if len(args):
                 d_ret['prior']  = args[0]
@@ -607,6 +619,7 @@ class LLDcomputeflow:
         """
 
         self.env.set_trace()
+        totalPolls:int      = 100 if not self.options.notimeout else 0
 
         d_ret : dict = \
         self.flow_executeAndBlockUntilNodeComplete(
@@ -619,6 +632,7 @@ class LLDcomputeflow:
                                     attachToNodeID          = self.newTreeID,
                                     workflowTitle           = 'Leg Length Discrepency inference on DICOM inputs v20230316',
                                     waitForNodeWithTitle    = 'heatmaps',
+                                    totalPolls              = totalPolls,
                                     pluginParameters        = {
                                         'dcm-to-mha'  : {
                                                     'imageName'         : 'composite.png',
@@ -639,6 +653,7 @@ class LLDcomputeflow:
                             ),
                             workflowTitle           = 'Leg Length Discrepency prediction formatter v20230316',
                             waitForNodeWithTitle    = 'landmarks-to-json',
+                            totalPolls              = totalPolls,
                             pluginParameters        = {
                                 'landmarks-to-json' : {
                                     'pftelDB'       : self.options.pftelDB
@@ -651,6 +666,7 @@ class LLDcomputeflow:
                     ),
                     workflowTitle           = 'Leg Length Discrepency measurements on image v20230316',
                     waitForNodeWithTitle    = 'measure-leg-segments',
+                    totalPolls              = 0,
                     pluginParameters        = {
                         'measure-leg-segments'  : {
                             'pftelDB'           : self.options.pftelDB
@@ -663,6 +679,7 @@ class LLDcomputeflow:
             ),
             workflowTitle           = 'PNG-to-DICOM and push to PACS v20230316',
             waitForNodeWithTitle    = 'pacs-push',
+            totalPolls              = totalPolls,
             pluginParameters        = {
                 'image-to-DICOM'    : {
                     'pftelDB'       : self.options.pftelDB

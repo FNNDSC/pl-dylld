@@ -46,7 +46,7 @@ pluginInputDir:Path     = None
 pluginOutputDir:Path    = None
 ld_forestResult:list    = []
 
-__version__ = '4.4.16'
+__version__ = '4.4.20'
 
 DISPLAY_TITLE = r"""
        _           _       _ _     _
@@ -139,6 +139,13 @@ parser.add_argument(
             "--inNode",
             help    = "perform in-node implicit parallelization in conjunction with --thread",
             dest    = 'inNode',
+            action  = 'store_true',
+            default = False
+)
+parser.add_argument(
+            "--notimeout",
+            help    = "if specified, then controller never timesout while waiting on nodes to complete",
+            dest    = 'notimeout',
             action  = 'store_true',
             default = False
 )
