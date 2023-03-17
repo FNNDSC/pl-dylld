@@ -424,6 +424,10 @@ def main(options: Namespace, inputdir: Path, outputdir: Path):
     if int(options.thread):
         with ThreadPoolExecutor(max_workers=len(os.sched_getaffinity(0))) as pool:
             results = pool.map(lambda t: tree_grow(options, *t), mapper)
+
+        # raise any Exceptions which happened in threads
+        for _ in results:
+            pass
     else:
         for input, output in mapper:
             results: dict = tree_grow(options, input, output)
