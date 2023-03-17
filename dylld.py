@@ -46,7 +46,7 @@ pluginInputDir:Path     = None
 pluginOutputDir:Path    = None
 ld_forestResult:list    = []
 
-__version__ = '4.4.16'
+__version__ = '4.4.18'
 
 DISPLAY_TITLE = r"""
        _           _       _ _     _
@@ -417,6 +417,10 @@ def main(options: Namespace, inputdir: Path, outputdir: Path):
     if int(options.thread):
         with ThreadPoolExecutor(max_workers=len(os.sched_getaffinity(0))) as pool:
             results = pool.map(lambda t: tree_grow(options, *t), mapper)
+
+        # raise any Exceptions which happened in threads
+        for _ in results:
+            pass
     else:
         for input, output in mapper:
             results: dict = tree_grow(options, input, output)
