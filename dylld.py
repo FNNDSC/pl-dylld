@@ -46,7 +46,7 @@ pluginInputDir:Path     = None
 pluginOutputDir:Path    = None
 ld_forestResult:list    = []
 
-__version__ = '4.4.21'
+__version__ = '4.4.22'
 
 DISPLAY_TITLE = r"""
        _           _       _ _     _
@@ -393,6 +393,10 @@ def epilogue(options:Namespace, dt_start:datetime = None) -> None:
     min_cpu_limit       = '1000m',          # millicores, e.g. "1000m" = 1 CPU core
     min_gpu_limit       = 0                 # set min_gpu_limit=1 to enable GPU
 )
+@pflog.tel_logTime(
+    event               = 'dylld',
+    log                 = 'Leg Length Discepency Dynamic Workflow controller'
+)
 def main(options: Namespace, inputdir: Path, outputdir: Path):
     """
     :param options: non-positional arguments parsed by the parser given to @chris_plugin
@@ -401,8 +405,6 @@ def main(options: Namespace, inputdir: Path, outputdir: Path):
     """
     # set_trace(term_size=(253, 62), host = '0.0.0.0', port = 7900)
     global pluginInputDir, pluginOutputDir
-    tagger:pftag.Pftag  = pftag.Pftag({})
-    dt_start:datetime   = pftag.timestamp_dt(tagger(r'%timestamp')['result'])
     pluginInputDir      = inputdir
     pluginOutputDir     = outputdir
 
@@ -434,7 +436,6 @@ def main(options: Namespace, inputdir: Path, outputdir: Path):
 
     LOG("Ending growth cycle...")
     treeGrowth_savelog(outputdir)
-    epilogue(options, dt_start)
 
 if __name__ == '__main__':
     main()
