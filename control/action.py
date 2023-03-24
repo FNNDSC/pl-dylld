@@ -630,7 +630,7 @@ class LLDcomputeflow:
                             self.flows_connect(
                                 self.flow_executeAndBlockUntilNodeComplete(
                                     attachToNodeID          = self.newTreeID,
-                                    workflowTitle           = 'Leg Length Discrepency inference on DICOM inputs v20230324 using CPU',
+                                    workflowTitle           = 'Leg Length Discrepency inference on DICOM inputs v20230324-1 using CPU',
                                     waitForNodeWithTitle    = 'heatmaps',
                                     totalPolls              = totalPolls,
                                     pluginParameters        = {
