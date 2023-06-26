@@ -688,7 +688,8 @@ class LLDcomputeflow:
                     'pftelDB'       : self.options.pftelDB,
                     'orthancUrl'    : self.env.orthanc('url'),
                     'username'      : self.env.orthanc('username'),
-                    'password'      : self.env.orthanc('password')
+                    'password'      : self.env.orthanc('password'),
+                    'pushToRemote'  : self.env.orthanc('remote')
                 }
             }
         )

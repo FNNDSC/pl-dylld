@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+from    collections.abc         import Iterator
 from    pathlib                 import Path
 from    argparse                import ArgumentParser, Namespace, ArgumentDefaultsHelpFormatter
 
@@ -42,11 +42,11 @@ logger_format = (
 logger.remove()
 logger.add(sys.stderr, format=logger_format)
 
-pluginInputDir:Path     = None
-pluginOutputDir:Path    = None
+pluginInputDir:Path
+pluginOutputDir:Path
 ld_forestResult:list    = []
 
-__version__ = '4.4.28'
+__version__ = '4.4.34'
 
 DISPLAY_TITLE = r"""
        _           _       _ _     _
@@ -198,6 +198,7 @@ def Env_setup(  options         : Namespace,
     Env.orthanc.set(url         = str(options.orthancURL))
     Env.orthanc.set(username    = str(options.orthancuser))
     Env.orthanc.set(password    = str(options.orthancpassword))
+    Env.orthanc.set(remote      = str(options.orthancremote))
     Env.set(inputdir            = inputdir)
     Env.set(outputdir           = outputdir)
     Env.debug_setup(    debug       = options.debug,
@@ -360,30 +361,6 @@ def treeGrowth_savelog(outputdir : Path) -> None:
         f.write(json.dumps(ld_forestResult, indent=4))
     f.close()
 
-def epilogue(options:Namespace, dt_start:datetime = None) -> None:
-    """
-    Some epilogue cleanup -- basically determine a delta time
-    between passed epoch and current, and if indicated in CLI
-    pflog this.
-
-    Args:
-        options (Namespace): option space
-        dt_start (datetime): optional start date
-    """
-    tagger:pftag.Pftag  = pftag.Pftag({})
-    dt_end:datetime     = pftag.timestamp_dt(tagger(r'%timestamp')['result'])
-    ft:float            = 0.0
-    if dt_start:
-        ft              = (dt_end - dt_start).total_seconds()
-    if options.pftelDB:
-        options.pftelDB = '/'.join(options.pftelDB.split('/')[:-1] + ['dylld'])
-        d_log:dict      = pflog.pfprint(
-                            options.pftelDB,
-                            f"Shutting down after {ft} seconds.",
-                            appName     = 'pl-dylld',
-                            execTime    = ft
-                        )
-
 # documentation: https://fnndsc.github.io/chris_plugin/chris_plugin.html#chris_plugin
 @chris_plugin(
     parser              = parser,
@@ -411,28 +388,28 @@ def main(options: Namespace, inputdir: Path, outputdir: Path):
 
     options.pftelDB     = preamble(options)
 
-    output: None = None
+    output:Path
     if not options.inNode:
-        mapper  = PathMapper.file_mapper(
+        mapper:PathMapper  = PathMapper.file_mapper(
                             inputdir,
                             outputdir,
                             glob        = options.pattern
                         )
     else:
-        mapper  = PathMapper.dir_mapper_deep(
+        mapper:PathMapper  = PathMapper.dir_mapper_deep(
                             inputdir,
                             outputdir
                         )
     if int(options.thread):
         with ThreadPoolExecutor(max_workers=len(os.sched_getaffinity(0))) as pool:
-            results = pool.map(lambda t: tree_grow(options, *t), mapper)
+            results:Iterator = pool.map(lambda t: tree_grow(options, *t), mapper)
 
         # raise any Exceptions which happened in threads
         for _ in results:
             pass
     else:
         for input, output in mapper:
-            results: dict = tree_grow(options, input, output)
+            d_results:dict = tree_grow(options, input, output)
 
     LOG("Ending growth cycle...")
     treeGrowth_savelog(outputdir)
