@@ -675,7 +675,7 @@ class LLDcomputeflow:
                 ),
                 connectionNodeTitle     = 'mergeMarkedJPGSwithDICOMS',
                 distalNodeIDs           = [('Topological', 'mergeDICOMSwithInference')],
-                topoJoinArgs            = '\.dcm$,\.png$'
+                topoJoinArgs            = '\.dcm$,\.*$'
             ),
             workflowTitle           = 'PNG-to-DICOM and push to PACS v20230324',
             waitForNodeWithTitle    = 'pacs-push',
