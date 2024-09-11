@@ -159,6 +159,10 @@ class LLDcomputeflow:
                                             self.env.CUBE('username'),
                                             self.env.CUBE('password')
                                         )
+        self.request = client.Request(
+            self.env.CUBE('username'),
+            self.env.CUBE('password')
+        )
         self.d_pipelines        : dict  = self.cl.get_pipelines()
         self.pltopo             : int   = self.cl.get_plugins({'name': 'pl-topologicalcopy'})
         self.newTreeID          : int   = -1
@@ -256,6 +260,7 @@ class LLDcomputeflow:
                 if totalPolls:  pollCount += 1
             if 'finished' in d_plinfo['status']:
                 b_finished  = d_plinfo['status'] == 'finishedSuccessfully'
+        #self.QA_check(d_plinfo)
         return {
             'finished'  : b_finished,
             'status'    : str_pluginStatus,
@@ -264,6 +269,14 @@ class LLDcomputeflow:
             'polls'     : pollCount,
             'plid'      : waitOnPluginID
         }
+    def QA_check(self,plugin_info):
+        print(plugin_info)
+        QA_plugin = 'pl-lld_chxr'
+        if QA_plugin in plugin_info['plugin_name']:
+            feed_id = plugin_info['feed_id']
+            feed = self.cl.get_feeds({'feed_id': feed_id})
+            name = feed['data'][0]['name']
+            self.request.put(f'{self.env.CUBE("url")}{feed_id}/', {'name': f'QA-failed-{name}'})
 
     def pluginParameters_setInNodes(self,
             d_piping            : dict,
