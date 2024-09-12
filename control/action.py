@@ -282,7 +282,7 @@ class LLDcomputeflow:
 
         """
         QA_plugin = 'pl-lld_chxr'
-        error_code = ''
+        error_code = 'QA check failed'
         if QA_plugin in plugin_info['plugin_name'] and error_code in plugin_info['summary']:
             feed_id = plugin_info['feed_id']
             feed = self.cl.get_feeds({'feed_id': feed_id})
