@@ -271,7 +271,7 @@ def tree_grow(options: Namespace, input: Path, output: Path = None) -> dict:
         output (Path, optional): ouptut path returned by mapper. Defaults to None.
 
     Returns:
-        dict: resultant object dictionary of this (threaded) growth
+        dict: resulant object dictionary of this (threaded) growth
     """
     global pluginInputDir, pluginOutputDir, LOG, ld_forestResult
 

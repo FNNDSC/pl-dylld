@@ -159,10 +159,6 @@ class LLDcomputeflow:
                                             self.env.CUBE('username'),
                                             self.env.CUBE('password')
                                         )
-        self.request = client.Request(
-            self.env.CUBE('username'),
-            self.env.CUBE('password')
-        )
         self.d_pipelines        : dict  = self.cl.get_pipelines()
         self.pltopo             : int   = self.cl.get_plugins({'name': 'pl-topologicalcopy'})
         self.newTreeID          : int   = -1
@@ -260,7 +256,6 @@ class LLDcomputeflow:
                 if totalPolls:  pollCount += 1
             if 'finished' in d_plinfo['status']:
                 b_finished  = d_plinfo['status'] == 'finishedSuccessfully'
-                self.QA_check(d_plinfo)
         return {
             'finished'  : b_finished,
             'status'    : str_pluginStatus,
@@ -269,25 +264,6 @@ class LLDcomputeflow:
             'polls'     : pollCount,
             'plid'      : waitOnPluginID
         }
-    def QA_check(self,plugin_info):
-        """
-        A method to check the QA of the output of LLD analysis. This method checks
-        the output of the QA plugin `pl-lld_chxr` and determines if a QA failure as occured.
-        As an effect of this check, the name of the feed of which this plugin, `pl-lld_chxr` is
-        a part, is changed. The updated name becomes `QA-failed-<existing feed name>`.
-        Args:
-            plugin_info: A dictionary representing a plugin instance of CUBE
-
-        Returns:
-
-        """
-        QA_plugin = 'pl-lld_chxr'
-        error_code = ''
-        if QA_plugin in plugin_info['plugin_name'] and error_code in plugin_info['summary']:
-            feed_id = plugin_info['feed_id']
-            feed = self.cl.get_feeds({'feed_id': feed_id})
-            name = feed['data'][0]['name']
-            self.request.put(f'{self.env.CUBE("url")}{feed_id}/', {'name': f'QA-failed-{name}'})
 
     def pluginParameters_setInNodes(self,
             d_piping            : dict,
@@ -702,7 +678,7 @@ class LLDcomputeflow:
                 topoJoinArgs            = '\.dcm$,\.*$'
             ),
             workflowTitle           = 'PNG-to-DICOM and push to PACS v20230324',
-            waitForNodeWithTitle    = 'QA-Check',
+            waitForNodeWithTitle    = 'pacs-push',
             totalPolls              = totalPolls,
             pluginParameters        = {
                 'image-to-DICOM'    : {
@@ -717,7 +693,6 @@ class LLDcomputeflow:
                 }
             }
         )
-
         # pudb.set_trace()
         return d_ret
 
