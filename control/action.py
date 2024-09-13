@@ -285,8 +285,8 @@ class LLDcomputeflow:
         error_code = 'QA check failed'
         if QA_plugin in plugin_info['plugin_name'] and error_code in plugin_info['summary']:
             feed_id = plugin_info['feed_id']
-            feed = self.cl.get_feeds({'feed_id': feed_id})
-            name = feed['data'][0]['name']
+            feed = self.cl.get_feed_by_id(feed_id)
+            name = feed['name']
             self.request.put(f'{self.env.CUBE("url")}{feed_id}/', {'name': f'QA-failed-{name}'})
 
     def pluginParameters_setInNodes(self,
