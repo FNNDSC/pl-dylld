@@ -274,7 +274,7 @@ class LLDcomputeflow:
         A method to check the QA of the output of LLD analysis. This method checks
         the output of the QA plugin `pl-lld_chxr` and determines if a QA failure as occured.
         As an effect of this check, the name of the feed of which this plugin, `pl-lld_chxr` is
-        a part, is changed. The updated name becomes `QA-failed-<existing feed name>`.
+        a part, is changed. The updated name becomes `QA-failed:<existing feed name>`.
         Args:
             plugin_info: A dictionary representing a plugin instance of CUBE
 
@@ -287,7 +287,7 @@ class LLDcomputeflow:
             feed_id = plugin_info['feed_id']
             feed = self.cl.get_feed_by_id(feed_id)
             name = feed['name']
-            self.request.put(f'{self.env.CUBE("url")}{feed_id}/', {'name': f'QA-failed-{name}'})
+            self.request.put(f'{self.env.CUBE("url")}{feed_id}/', {'name': f'QA-failed:{name}'})
 
     def pluginParameters_setInNodes(self,
             d_piping            : dict,
