@@ -6,7 +6,9 @@
 
 `pl-dylld` is a [_ChRIS_](https://chrisproject.org/)
 _ds_ plugin which connects to a parent node containing DICOM images and then dynamically creates a responsive compute flow (including joins). In its output directory, `pl-dylld` generates various logging/tracking data.
-The documentation for entire LLD workflow along with step by step data flow in each of the compute nodes came be found here https://github.com/FNNDSC/CHRIS_docs/blob/master/workflows/LLD.md
+
+
+The documentation for entire LLD workflow along with step by step data flow in each of the compute nodes can be found here https://github.com/FNNDSC/CHRIS_docs/blob/master/workflows/LLD.md
 
 ## Abstract
 
