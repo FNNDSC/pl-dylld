@@ -47,7 +47,7 @@ pluginInputDir: Path
 pluginOutputDir: Path
 ld_forestResult: list = []
 
-__version__ = "4.4.44"
+__version__ = "4.4.45"
 
 DISPLAY_TITLE = r"""
        _           _       _ _     _
